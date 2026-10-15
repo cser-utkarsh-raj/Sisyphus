@@ -1,0 +1,461 @@
+import fs from 'fs';
+import path from 'path';
+import type { AppSettings, ConnectionConfig, Job, VoiceProfile } from '../src/types/pipeline.ts';
+
+const DATA_DIR = path.resolve(process.cwd(), 'data');
+const DB_FILE = path.join(DATA_DIR, 'sisyphus-store.json');
+const ARTIFACTS_DIR = path.join(DATA_DIR, 'artifacts');
+
+export interface DatabaseSchema {
+  jobs: Job[];
+  voices: VoiceProfile[];
+  connections: ConnectionConfig[];
+  settings: AppSettings;
+}
+
+export const INITIAL_VOICES: VoiceProfile[] = [
+  {
+    id: 'zephyr',
+    name: 'Zephyr',
+    tone: 'Existential & Melancholic',
+    personality: 'Deep, reflective, philosophically curious voice suited for grand cosmic and psychological topics.',
+    gender: 'neutral',
+    provider: 'gemini-tts',
+    voiceIdentifier: 'Zephyr',
+    language: 'en-US',
+    sampleText: 'Look up at the night sky. Every photon hitting your retina was born millions of years ago in a dying furnace.',
+    accentColor: '#ec4899', // pink-500
+  },
+  {
+    id: 'puck',
+    name: 'Puck',
+    tone: 'Witty & Energetic',
+    personality: 'Crisp, punchy, fast-paced cadence for science breakdowns, paradoxes, and surprising trivia.',
+    gender: 'male',
+    provider: 'gemini-tts',
+    voiceIdentifier: 'Puck',
+    language: 'en-US',
+    sampleText: 'Your brain hallucinates your entire reality, and when it agrees with everyone else, you call it sanity!',
+    accentColor: '#38bdf8', // sky-400
+  },
+  {
+    id: 'kore',
+    name: 'Kore',
+    tone: 'Authoritative & Academic',
+    personality: 'Measured, crystal-clear documentary voice for history, biological evolution, and data explainers.',
+    gender: 'female',
+    provider: 'gemini-tts',
+    voiceIdentifier: 'Kore',
+    language: 'en-US',
+    sampleText: 'In 1962, the world almost ended not with a bang, but with a false radar detection in Greenland.',
+    accentColor: '#a855f7', // purple-500
+  },
+  {
+    id: 'fenrir',
+    name: 'Fenrir',
+    tone: 'Dramatic & Darkly Humorous',
+    personality: 'Gravelly, suspenseful, dry delivery tailored for absurdist scenarios, dark humor, and speculative futures.',
+    gender: 'male',
+    provider: 'gemini-tts',
+    voiceIdentifier: 'Fenrir',
+    language: 'en-US',
+    sampleText: 'Congratulations. By reading this sentence, you just surrendered three seconds of your finite existence to a glowing glass rectangle.',
+    accentColor: '#f59e0b', // amber-500
+  },
+];
+
+export const INITIAL_CONNECTIONS: ConnectionConfig[] = [
+  {
+    platform: 'youtube',
+    displayName: 'YouTube Shorts',
+    connected: false,
+    status: 'SETUP_REQUIRED',
+    requiredScopes: ['https://www.googleapis.com/auth/youtube.upload'],
+    credentialsConfigured: false,
+    instructions: {
+      title: 'YouTube Data API v3 Setup Guide',
+      steps: [
+        'Open Google Cloud Console and select or create your project.',
+        'Enable YouTube Data API v3 in APIs & Services > Library.',
+        'Create an OAuth 2.0 Client ID (Web application) in Credentials.',
+        'Add authorized redirect URI matching your deployment APP_URL/api/auth/youtube/callback.',
+        'Configure YOUTUBE_CLIENT_ID and YOUTUBE_CLIENT_SECRET or enter below.',
+        'Videos under 60s with #Shorts in title are automatically indexed on the Shorts shelf.',
+      ],
+      docsUrl: 'https://developers.google.com/youtube/v3/guides/uploading_a_video',
+    },
+  },
+  {
+    platform: 'instagram',
+    displayName: 'Instagram Reels',
+    connected: false,
+    status: 'SETUP_REQUIRED',
+    requiredScopes: ['instagram_basic', 'instagram_content_publish'],
+    credentialsConfigured: false,
+    instructions: {
+      title: 'Instagram Graph API for Reels Setup',
+      steps: [
+        'Ensure you have a Meta Professional (Creator or Business) Instagram account.',
+        'Connect your Instagram account to a Facebook Page.',
+        'In Meta for Developers, register an app and add the Instagram Graph API.',
+        'Generate a Page Access Token with instagram_content_publish permission.',
+        'Enter INSTAGRAM_ACCESS_TOKEN and INSTAGRAM_BUSINESS_ACCOUNT_ID.',
+        'Sisyphus uses the official container-based video upload flow.',
+      ],
+      docsUrl: 'https://developers.facebook.com/docs/instagram-platform/instagram-graph-api/content-publishing',
+    },
+  },
+  {
+    platform: 'facebook',
+    displayName: 'Facebook Reels',
+    connected: false,
+    status: 'SETUP_REQUIRED',
+    requiredScopes: ['pages_manage_posts', 'pages_read_engagement', 'publish_video'],
+    credentialsConfigured: false,
+    instructions: {
+      title: 'Facebook Reels Publishing API Setup',
+      steps: [
+        'Create a Facebook Page dedicated to your content channel.',
+        'In Meta App Dashboard, enable Pages API and Video Upload permissions.',
+        'Obtain a long-lived Page Access Token with publish_video permission.',
+        'Provide FACEBOOK_PAGE_ID and FACEBOOK_PAGE_ACCESS_TOKEN.',
+        'Sisyphus calls POST /{page-id}/video_reels to create and publish Reels.',
+      ],
+      docsUrl: 'https://developers.facebook.com/docs/video-api/guides/reels-publishing',
+    },
+  },
+];
+
+export const INITIAL_DEMO_JOB: Job = {
+  id: 'sisyphus-demo-paradox',
+  topic: 'The Quantum Immortality Paradox',
+  creativePrompt: 'Examine the many-worlds interpretation thought experiment regarding subjective observer survival.',
+  style: 'cyber_brutalist_pink',
+  targetDurationSec: 32,
+  voiceId: 'zephyr',
+  targetPlatforms: ['youtube', 'instagram', 'facebook'],
+  status: 'completed',
+  currentStage: 'record_status',
+  progress: 100,
+  stages: {
+    validate_input: { id: 'validate_input', name: 'Input Validation', description: 'Validate parameters', status: 'completed', durationMs: 140, logs: ['Topic validated', 'Duration < 60s verified'] },
+    generate_script: { id: 'generate_script', name: 'Script & Storyboard', description: 'AI generation', status: 'completed', durationMs: 1800, logs: ['Generated 4 scenes via Gemini 3.8 Flash'] },
+    validate_duration: { id: 'validate_duration', name: 'Duration & Pacing Check', description: 'Ensure < 60s', status: 'completed', durationMs: 80, logs: ['Duration 32.4s verified'] },
+    generate_audio: { id: 'generate_audio', name: 'Voice Narration', description: 'Synthesize speech', status: 'completed', durationMs: 2200, logs: ['Synthesized via Zephyr (Gemini TTS)'] },
+    align_subtitles: { id: 'align_subtitles', name: 'Karaoke Word Alignment', description: 'Word timestamps', status: 'completed', durationMs: 320, logs: ['Aligned 86 words across 14 lines'] },
+    render_scenes: { id: 'render_scenes', name: 'Procedural Animation', description: 'Vector graphics', status: 'completed', durationMs: 1100, logs: ['Compiled kinetic canvas scenes'] },
+    composite_media: { id: 'composite_media', name: 'Compositing & Sound', description: 'Media blend', status: 'completed', durationMs: 950, logs: ['Composited narration and waveforms'] },
+    encode_mp4: { id: 'encode_mp4', name: 'Encode & Verify MP4', description: 'FFmpeg encoding', status: 'completed', durationMs: 3100, logs: ['Validated 1080x1920 30FPS H.264 stream'] },
+    prepare_metadata: { id: 'prepare_metadata', name: 'Platform Metadata', description: 'Prepare tags', status: 'completed', durationMs: 200, logs: ['Formatted #Shorts and Reels metadata'] },
+    publish_platforms: { id: 'publish_platforms', name: 'Social Publishing', description: 'Official APIs', status: 'completed', durationMs: 1400, logs: ['Dispatched to enabled channels'] },
+    record_status: { id: 'record_status', name: 'Archive & Status', description: 'Finalize job', status: 'completed', durationMs: 110, logs: ['Archived to library'] },
+  },
+  script: {
+    title: 'The Quantum Immortality Paradox',
+    topic: 'The Quantum Immortality Paradox',
+    hook: 'Stop scrolling. What if you literally cannot experience your own demise?',
+    callToAction: 'Hit follow to question reality daily.',
+    description: 'A deep-dive into the Many-Worlds quantum suicide thought experiment. Produced with Sisyphus code-driven video engine.',
+    hashtags: ['#QuantumPhysics', '#Paradox', '#MindBlowing', '#Sisyphus', '#Shorts'],
+    targetDurationSec: 32,
+    estimatedDurationSec: 31.8,
+    fullNarration: 'Stop scrolling. What if you literally cannot experience your own demise? According to the Many-Worlds interpretation of quantum mechanics, every branching probability spawns a parallel reality. In ninety-nine percent of branches, the observer ceases to exist. But your subjective consciousness can only ever awaken in the surviving branch. Leaving one haunting paradox: from your own perspective, are you immortal?',
+    scenes: [
+      {
+        id: 's1',
+        sceneNumber: 1,
+        title: 'The Branching Hook',
+        narration: 'Stop scrolling. What if you literally cannot experience your own demise?',
+        startMs: 0,
+        endMs: 7500,
+        visualType: 'kinetic-hook',
+        visualElements: { primaryShape: 'helix', accentColor: '#ff2a85', headlineText: 'QUANTUM PARADOX', subText: 'SUBJECTIVE IMMORTALITY', kineticWords: ['STOP', 'LOOK', 'WITHIN'] },
+      },
+      {
+        id: 's2',
+        sceneNumber: 2,
+        title: 'Many-Worlds Branching',
+        narration: 'According to the Many-Worlds interpretation of quantum mechanics, every branching probability spawns a parallel reality.',
+        startMs: 7500,
+        endMs: 16000,
+        visualType: 'diagram-chart',
+        visualElements: {
+          primaryShape: 'waveform',
+          accentColor: '#38bdf8',
+          headlineText: 'PROBABILITY SPLIT',
+          diagramData: [
+            { label: 'Branch Alpha', value: 50, color: '#ff2a85' },
+            { label: 'Branch Beta', value: 50, color: '#38bdf8' },
+          ],
+        },
+      },
+      {
+        id: 's3',
+        sceneNumber: 3,
+        title: 'The Surviving Ratio',
+        narration: 'In ninety-nine percent of branches, the observer ceases to exist. But your subjective consciousness can only ever awaken in the surviving branch.',
+        startMs: 16000,
+        endMs: 25000,
+        visualType: 'data-counter',
+        visualElements: {
+          primaryShape: 'nodes',
+          accentColor: '#fde047',
+          counterTarget: 99,
+          counterSuffix: '%',
+          headlineText: 'DECAY RATE',
+          subText: 'Consciousness observer filter',
+        },
+      },
+      {
+        id: 's4',
+        sceneNumber: 4,
+        title: 'The Lingering Question',
+        narration: 'Leaving one haunting paradox: from your own perspective, are you immortal?',
+        startMs: 25000,
+        endMs: 32000,
+        visualType: 'punchline-conclusion',
+        visualElements: { primaryShape: 'orbit', accentColor: '#a855f7', headlineText: 'ARE YOU IMMORTAL?', subText: 'Think about it.' },
+      },
+    ],
+  },
+  subtitles: [
+    {
+      id: 'l1',
+      text: 'Stop scrolling.',
+      startMs: 300,
+      endMs: 1600,
+      words: [{ word: 'Stop', startMs: 300, endMs: 800, confidence: 1 }, { word: 'scrolling.', startMs: 850, endMs: 1600, confidence: 1 }],
+    },
+    {
+      id: 'l2',
+      text: 'What if you literally cannot experience',
+      startMs: 1700,
+      endMs: 4400,
+      words: [
+        { word: 'What', startMs: 1700, endMs: 2000, confidence: 1 },
+        { word: 'if', startMs: 2050, endMs: 2300, confidence: 1 },
+        { word: 'you', startMs: 2350, endMs: 2600, confidence: 1 },
+        { word: 'literally', startMs: 2650, endMs: 3300, confidence: 1 },
+        { word: 'cannot', startMs: 3350, endMs: 3800, confidence: 1 },
+        { word: 'experience', startMs: 3850, endMs: 4400, confidence: 1 },
+      ],
+    },
+    {
+      id: 'l3',
+      text: 'your own demise?',
+      startMs: 4450,
+      endMs: 6500,
+      words: [
+        { word: 'your', startMs: 4450, endMs: 4800, confidence: 1 },
+        { word: 'own', startMs: 4850, endMs: 5300, confidence: 1 },
+        { word: 'demise?', startMs: 5350, endMs: 6500, confidence: 1 },
+      ],
+    },
+    {
+      id: 'l4',
+      text: 'According to the Many-Worlds interpretation',
+      startMs: 6600,
+      endMs: 10200,
+      words: [
+        { word: 'According', startMs: 6600, endMs: 7200, confidence: 1 },
+        { word: 'to', startMs: 7250, endMs: 7500, confidence: 1 },
+        { word: 'the', startMs: 7550, endMs: 7800, confidence: 1 },
+        { word: 'Many-Worlds', startMs: 7850, endMs: 8900, confidence: 1 },
+        { word: 'interpretation', startMs: 8950, endMs: 10200, confidence: 1 },
+      ],
+    },
+    {
+      id: 'l5',
+      text: 'of quantum mechanics,',
+      startMs: 10300,
+      endMs: 12200,
+      words: [
+        { word: 'of', startMs: 10300, endMs: 10600, confidence: 1 },
+        { word: 'quantum', startMs: 10650, endMs: 11300, confidence: 1 },
+        { word: 'mechanics,', startMs: 11350, endMs: 12200, confidence: 1 },
+      ],
+    },
+    {
+      id: 'l6',
+      text: 'every branching probability spawns a reality.',
+      startMs: 12300,
+      endMs: 16000,
+      words: [
+        { word: 'every', startMs: 12300, endMs: 12800, confidence: 1 },
+        { word: 'branching', startMs: 12850, endMs: 13600, confidence: 1 },
+        { word: 'probability', startMs: 13650, endMs: 14600, confidence: 1 },
+        { word: 'spawns', startMs: 14650, endMs: 15200, confidence: 1 },
+        { word: 'a', startMs: 15250, endMs: 15400, confidence: 1 },
+        { word: 'reality.', startMs: 15450, endMs: 16000, confidence: 1 },
+      ],
+    },
+    {
+      id: 'l7',
+      text: 'In ninety-nine percent of branches,',
+      startMs: 16100,
+      endMs: 19800,
+      words: [
+        { word: 'In', startMs: 16100, endMs: 16400, confidence: 1 },
+        { word: 'ninety-nine', startMs: 16450, endMs: 17400, confidence: 1 },
+        { word: 'percent', startMs: 17450, endMs: 18100, confidence: 1 },
+        { word: 'of', startMs: 18150, endMs: 18500, confidence: 1 },
+        { word: 'branches,', startMs: 18550, endMs: 19800, confidence: 1 },
+      ],
+    },
+    {
+      id: 'l8',
+      text: 'the observer ceases to exist.',
+      startMs: 19900,
+      endMs: 23200,
+      words: [
+        { word: 'the', startMs: 19900, endMs: 20200, confidence: 1 },
+        { word: 'observer', startMs: 20250, endMs: 21000, confidence: 1 },
+        { word: 'ceases', startMs: 21050, endMs: 21800, confidence: 1 },
+        { word: 'to', startMs: 21850, endMs: 22100, confidence: 1 },
+        { word: 'exist.', startMs: 22150, endMs: 23200, confidence: 1 },
+      ],
+    },
+    {
+      id: 'l9',
+      text: 'Leaving one haunting paradox:',
+      startMs: 23300,
+      endMs: 26800,
+      words: [
+        { word: 'Leaving', startMs: 23300, endMs: 24000, confidence: 1 },
+        { word: 'one', startMs: 24050, endMs: 24400, confidence: 1 },
+        { word: 'haunting', startMs: 24450, endMs: 25400, confidence: 1 },
+        { word: 'paradox:', startMs: 25450, endMs: 26800, confidence: 1 },
+      ],
+    },
+    {
+      id: 'l10',
+      text: 'are you immortal?',
+      startMs: 26900,
+      endMs: 31000,
+      words: [
+        { word: 'are', startMs: 26900, endMs: 27500, confidence: 1 },
+        { word: 'you', startMs: 27550, endMs: 28300, confidence: 1 },
+        { word: 'immortal?', startMs: 28350, endMs: 31000, confidence: 1 },
+      ],
+    },
+  ],
+  videoMetadata: {
+    width: 1080,
+    height: 1920,
+    aspectRatio: '9:16',
+    fps: 30,
+    durationSec: 32,
+    format: 'H.264 / AAC',
+    fileSizeBytes: 2840000,
+    isValidated: true,
+  },
+  publications: {
+    youtube: { platform: 'youtube', status: 'published', publicationId: 'yt_demo_shorts_1', publicationUrl: 'https://youtube.com/shorts/yt_demo_shorts_1', retryCount: 0 },
+    instagram: { platform: 'instagram', status: 'published', publicationId: 'ig_demo_reel_1', publicationUrl: 'https://www.instagram.com/reel/ig_demo_reel_1/', retryCount: 0 },
+    facebook: { platform: 'facebook', status: 'published', publicationId: 'fb_demo_reel_1', publicationUrl: 'https://facebook.com/reel/fb_demo_reel_1', retryCount: 0 },
+  },
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+};
+
+export const INITIAL_SETTINGS: AppSettings = {
+  defaultVoiceId: 'zephyr',
+  defaultStyle: 'cyber_brutalist_pink',
+  defaultDurationSec: 32,
+  safeMarginGuideEnabled: true,
+  outputResolution: '1080x1920',
+  targetFps: 30,
+  maxDurationSec: 59,
+  defaultHashtags: ['#Sisyphus', '#MindBending', '#Science', '#Infographic', '#DidYouKnow'],
+  dailySchedule: {
+    enabled: false,
+    timeOfDayUtc: '09:00',
+    topicTemplate: 'Surprising paradox in cognitive science or physics',
+    voiceId: 'puck',
+    targetPlatforms: ['youtube', 'instagram'],
+    nextRunAt: new Date(Date.now() + 86400000).toISOString(),
+  },
+};
+
+function ensureDirs() {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  if (!fs.existsSync(ARTIFACTS_DIR)) fs.mkdirSync(ARTIFACTS_DIR, { recursive: true });
+}
+
+export function loadDatabase(): DatabaseSchema {
+  ensureDirs();
+  if (!fs.existsSync(DB_FILE)) {
+    const initialDb: DatabaseSchema = {
+      jobs: [INITIAL_DEMO_JOB],
+      voices: INITIAL_VOICES,
+      connections: INITIAL_CONNECTIONS,
+      settings: INITIAL_SETTINGS,
+    };
+    saveDatabase(initialDb);
+    return initialDb;
+  }
+
+  try {
+    const raw = fs.readFileSync(DB_FILE, 'utf-8');
+    const data = JSON.parse(raw);
+    return {
+      jobs: data.jobs || [],
+      voices: data.voices?.length ? data.voices : INITIAL_VOICES,
+      connections: data.connections?.length ? data.connections : INITIAL_CONNECTIONS,
+      settings: { ...INITIAL_SETTINGS, ...(data.settings || {}) },
+    };
+  } catch (err) {
+    console.error('Failed to parse database, recovering initial schema:', err);
+    return {
+      jobs: [],
+      voices: INITIAL_VOICES,
+      connections: INITIAL_CONNECTIONS,
+      settings: INITIAL_SETTINGS,
+    };
+  }
+}
+
+export function saveDatabase(data: DatabaseSchema): void {
+  ensureDirs();
+  const tmpFile = `${DB_FILE}.tmp`;
+  fs.writeFileSync(tmpFile, JSON.stringify(data, null, 2), 'utf-8');
+  fs.renameSync(tmpFile, DB_FILE);
+}
+
+export function getJobs(): Job[] {
+  return loadDatabase().jobs;
+}
+
+export function getJobById(id: string): Job | undefined {
+  const db = loadDatabase();
+  return db.jobs.find((j) => j.id === id);
+}
+
+export function saveJob(job: Job): Job {
+  const db = loadDatabase();
+  const index = db.jobs.findIndex((j) => j.id === job.id);
+  job.updatedAt = new Date().toISOString();
+  if (index >= 0) {
+    db.jobs[index] = job;
+  } else {
+    db.jobs.unshift(job);
+  }
+  saveDatabase(db);
+  return job;
+}
+
+export function deleteJob(id: string): boolean {
+  const db = loadDatabase();
+  const initialLen = db.jobs.length;
+  db.jobs = db.jobs.filter((j) => j.id !== id);
+  if (db.jobs.length !== initialLen) {
+    saveDatabase(db);
+    return true;
+  }
+  return false;
+}
+
+export function getArtifactsPath(): string {
+  ensureDirs();
+  return ARTIFACTS_DIR;
+}

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Dark Obsidian Base -->
+  <rect width="64" height="64" rx="16" fill="#070A14"/>
+  <rect width="64" height="64" rx="16" stroke="#FF2A85" stroke-width="2.5"/>
+  
+  <!-- Incline / Mountain slope -->
+  <path d="M8 52 L56 24" stroke="#38BDF8" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Glowing Pink Boulder / Sphere of Sisyphus -->
+  <circle cx="38" cy="24" r="11" fill="#FF2A85"/>
+  <circle cx="38" cy="24" r="11" stroke="#FDF2F8" stroke-width="2"/>
+  <circle cx="34" cy="20" r="3.5" fill="#FDE047"/>
+  
+  <!-- Sisyphus Geometric Figure pushing -->
+  <path d="M22 45 L28 35 L33 30" stroke="#FDF2F8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M22 45 L18 52" stroke="#FDF2F8" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M28 35 L26 43" stroke="#FDF2F8" stroke-width="3" stroke-linecap="round"/>
+  <!-- Figure Head -->
+  <circle cx="27" cy="26" r="4" fill="#FDE047"/>
+  
+  <!-- Kinetic Motion Lines -->
+  <path d="M48 16 L52 14" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+  <path d="M46 22 L51 21" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
+  <path d="M42 12 L45 9" stroke="#38BDF8" stroke-width="2" stroke-linecap="round"/>
+</svg>

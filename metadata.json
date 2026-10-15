@@ -1,0 +1,6 @@
+{
+  "name": "Sisyphus — Automated Short-Form Video Production Pipeline",
+  "description": "Automated short-form video production pipeline generating original, code-driven educational and entertaining infographic videos under 60 seconds with word-synchronized subtitles and publishing to YouTube Shorts, Instagram Reels, and Facebook Reels.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

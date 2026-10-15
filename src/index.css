@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-dark: #0a0a0f;
+    --surface-dark: #12111a;
+    --surface-card: #181622;
+    --pink-primary: #ff2a85;
+    --pink-glow: #ff69b4;
+    --pink-soft: #ffe4ec;
+    --pink-muted: #3d1728;
+    --text-primary: #fdf2f8;
+    --text-muted: #9d8ba2;
+  }
+
+  body {
+    background-color: #0a0a0f;
+    color: #fdf2f8;
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow-x: hidden;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Cute Brutalist Shadows & Utilities */
+.shadow-brutal-pink {
+  box-shadow: 4px 4px 0px 0px #ff2a85;
+}
+
+.shadow-brutal-pink-sm {
+  box-shadow: 2px 2px 0px 0px #ff2a85;
+}
+
+.shadow-brutal-black {
+  box-shadow: 4px 4px 0px 0px #000000;
+}
+
+.shadow-brutal-white {
+  box-shadow: 4px 4px 0px 0px #ffffff;
+}
+
+.border-brutal {
+  border-width: 2px;
+  border-color: #ff2a85;
+}
+
+/* Animated Sound Waveform Bars */
+@keyframes waveBounce {
+  0%, 100% {
+    height: 6px;
+  }
+  50% {
+    height: 28px;
+  }
+}
+
+.animate-wave-1 {
+  animation: waveBounce 0.8s ease-in-out infinite alternate;
+}
+.animate-wave-2 {
+  animation: waveBounce 0.6s ease-in-out infinite 0.2s alternate;
+}
+.animate-wave-3 {
+  animation: waveBounce 0.9s ease-in-out infinite 0.4s alternate;
+}
+.animate-wave-4 {
+  animation: waveBounce 0.7s ease-in-out infinite 0.1s alternate;
+}
+.animate-wave-5 {
+  animation: waveBounce 1.0s ease-in-out infinite 0.3s alternate;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d0d14;
+}
+::-webkit-scrollbar-thumb {
+  background: #ff2a85;
+  border-radius: 3px;
+}
