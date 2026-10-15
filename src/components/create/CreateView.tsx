@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Play, Clock, Palette, Radio, Globe, AlertTriangle } from 'lucide-react';
+import { Sparkles, Play, Clock, Palette, Radio, Globe, AlertTriangle, RefreshCw } from 'lucide-react';
 import type { TargetPlatform, VideoStyle, VoiceId } from '../../types/pipeline.ts';
 
 interface CreateViewProps {
@@ -156,10 +156,11 @@ export const CreateView: React.FC<CreateViewProps> = ({ defaultVoiceId, onJobCre
 
         {/* Topic Input */}
         <div>
-          <label className="block text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold mb-2">
+          <label htmlFor="video-topic" className="block text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold mb-2">
             1. Topic or Question <span className="text-[#ff2a85]">*</span>
           </label>
           <input
+            id="video-topic"
             type="text"
             required
             placeholder="e.g. Why Light Takes 100,000 Years to Escape the Sun"
@@ -171,10 +172,11 @@ export const CreateView: React.FC<CreateViewProps> = ({ defaultVoiceId, onJobCre
 
         {/* Creative Direction Prompt */}
         <div>
-          <label className="block text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold mb-2">
+          <label htmlFor="creative-direction" className="block text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold mb-2">
             2. Creative Direction & Tone (Optional)
           </label>
           <textarea
+            id="creative-direction"
             rows={2}
             placeholder="Focus on the counter-intuitive physics, keep pacing fast, use dark humor..."
             value={creativePrompt}
@@ -186,7 +188,7 @@ export const CreateView: React.FC<CreateViewProps> = ({ defaultVoiceId, onJobCre
         {/* Target Duration & Pacing Slider */}
         <div className="p-4 rounded-xl bg-[#0c0c13] border border-zinc-800 space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold flex items-center gap-2">
+            <label htmlFor="target-duration" className="text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold flex items-center gap-2">
               <Clock className="w-4 h-4 text-[#ff2a85]" />
               Target Duration: <span className="text-[#ff2a85] text-sm">{targetDurationSec}s</span>
             </label>
@@ -195,6 +197,7 @@ export const CreateView: React.FC<CreateViewProps> = ({ defaultVoiceId, onJobCre
             </span>
           </div>
           <input
+            id="target-duration"
             type="range"
             min={20}
             max={58}
@@ -213,11 +216,12 @@ export const CreateView: React.FC<CreateViewProps> = ({ defaultVoiceId, onJobCre
         {/* Voice Selection & Style Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold mb-2 flex items-center gap-1.5">
+            <label htmlFor="narration-voice" className="block text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold mb-2 flex items-center gap-1.5">
               <Radio className="w-4 h-4 text-[#ff2a85]" />
               Narration Voice Profile
             </label>
             <select
+              id="narration-voice"
               value={voiceId}
               onChange={(e) => setVoiceId(e.target.value as VoiceId)}
               className="w-full bg-[#0a0a0f] border-2 border-zinc-800 focus:border-[#ff2a85] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none capitalize font-mono"
@@ -230,11 +234,12 @@ export const CreateView: React.FC<CreateViewProps> = ({ defaultVoiceId, onJobCre
           </div>
 
           <div>
-            <label className="block text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold mb-2 flex items-center gap-1.5">
+            <label htmlFor="visual-theme" className="block text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold mb-2 flex items-center gap-1.5">
               <Palette className="w-4 h-4 text-[#ff2a85]" />
               Procedural Visual Theme
             </label>
             <select
+              id="visual-theme"
               value={style}
               onChange={(e) => setStyle(e.target.value as VideoStyle)}
               className="w-full bg-[#0a0a0f] border-2 border-zinc-800 focus:border-[#ff2a85] rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none font-mono"
@@ -249,11 +254,11 @@ export const CreateView: React.FC<CreateViewProps> = ({ defaultVoiceId, onJobCre
 
         {/* Target Platforms Checkboxes */}
         <div>
-          <label className="block text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold mb-2 flex items-center gap-1.5">
+          <div id="target-platforms-label" className="block text-xs font-mono uppercase tracking-wider text-zinc-300 font-bold mb-2 flex items-center gap-1.5">
             <Globe className="w-4 h-4 text-[#ff2a85]" />
             Target Social Channels
-          </label>
-          <div className="grid grid-cols-3 gap-3">
+          </div>
+          <div role="group" aria-labelledby="target-platforms-label" className="grid grid-cols-3 gap-3">
             {[
               { id: 'youtube', label: 'YouTube Shorts' },
               { id: 'instagram', label: 'Instagram Reels' },
@@ -283,10 +288,13 @@ export const CreateView: React.FC<CreateViewProps> = ({ defaultVoiceId, onJobCre
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-4 rounded-xl bg-[#ff2a85] text-black font-extrabold text-base tracking-wider uppercase border-2 border-black shadow-brutal-black hover:bg-[#ff4e99] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2"
+            className="w-full py-4 rounded-xl bg-[#ff2a85] text-black font-extrabold text-base tracking-wider uppercase border-2 border-black shadow-brutal-black enabled:hover:bg-[#ff4e99] enabled:active:translate-x-[2px] enabled:active:translate-y-[2px] enabled:active:shadow-none disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
           >
             {submitting ? (
-              <span>Initiating Production Pipeline...</span>
+              <>
+                <RefreshCw className="w-5 h-5 animate-spin" aria-hidden="true" />
+                <span>Initiating Production Pipeline...</span>
+              </>
             ) : (
               <>
                 <Play className="w-5 h-5 fill-black" />
