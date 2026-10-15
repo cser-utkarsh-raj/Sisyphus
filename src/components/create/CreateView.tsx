@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Play, Clock, Palette, Radio, Globe, AlertTriangle } from 'lucide-react';
+import { Sparkles, Play, Clock, Palette, Radio, Globe, AlertTriangle, RefreshCw } from 'lucide-react';
 import type { TargetPlatform, VideoStyle, VoiceId } from '../../types/pipeline.ts';
 
 interface CreateViewProps {
@@ -283,10 +283,13 @@ export const CreateView: React.FC<CreateViewProps> = ({ defaultVoiceId, onJobCre
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-4 rounded-xl bg-[#ff2a85] text-black font-extrabold text-base tracking-wider uppercase border-2 border-black shadow-brutal-black hover:bg-[#ff4e99] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2"
+            className="w-full py-4 rounded-xl bg-[#ff2a85] text-black font-extrabold text-base tracking-wider uppercase border-2 border-black shadow-brutal-black hover:bg-[#ff4e99] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-[#ff2a85] disabled:active:translate-x-0 disabled:active:translate-y-0 disabled:active:shadow-brutal-black"
           >
             {submitting ? (
-              <span>Initiating Production Pipeline...</span>
+              <>
+                <RefreshCw className="w-5 h-5 animate-spin" />
+                <span>Initiating Production Pipeline...</span>
+              </>
             ) : (
               <>
                 <Play className="w-5 h-5 fill-black" />
