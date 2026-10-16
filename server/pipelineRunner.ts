@@ -6,7 +6,7 @@ import { formatPlatformMetadata } from '../src/utils/platforms.ts';
 import { getArtifactsPath, getJobById, loadDatabase, saveJob } from './db.ts';
 import { generateScriptWithAi, generateSpeechAudio } from './gemini.ts';
 import { dispatchPublish } from './publisher.ts';
-import { renderAndEncodeMp4 } from './videoRenderer.ts';
+import { renderAndEncodeMp4 } from './argonRendererAdapter.ts';
 
 /**
  * Executes or resumes a job through the 11-stage pipeline.
