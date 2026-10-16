@@ -44,8 +44,8 @@ export const ConnectionsView: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           connected: !currentConnected,
-          accountName: !currentConnected ? `@Sisyphus${platform.toUpperCase()}` : undefined,
-          accountId: !currentConnected ? `${platform}_demo_channel` : undefined,
+          accountName: !currentConnected ? `@Aurora_${platform.toUpperCase()}` : undefined,
+          accountId: !currentConnected ? `${platform}_aurora_channel` : undefined,
         }),
       });
 
@@ -77,7 +77,7 @@ export const ConnectionsView: React.FC = () => {
           Social Platform Connections
         </h1>
         <p className="text-sm text-pink-200/70 mt-1 max-w-2xl font-sans">
-          Sisyphus publishes exclusively via official platform APIs: YouTube Data API v3, Instagram Graph API (for Professional Accounts), and Facebook Pages Reels API.
+          Aurora.ai publishes exclusively via official platform APIs: YouTube Data API v3, Instagram Graph API (for Professional Accounts), and Facebook Pages Reels API.
         </p>
       </div>
 

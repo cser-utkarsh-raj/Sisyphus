@@ -1,25 +1,37 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <!-- Dark Obsidian Base -->
+  <defs>
+    <linearGradient id="auroraGrad" x1="4" y1="60" x2="60" y2="4" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FF2A85"/>
+      <stop offset="45%" stop-color="#38BDF8"/>
+      <stop offset="85%" stop-color="#22C55E"/>
+      <stop offset="100%" stop-color="#FDE047"/>
+    </linearGradient>
+    <radialGradient id="auroraGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#070A14" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Obsidian Dark Base Container -->
   <rect width="64" height="64" rx="16" fill="#070A14"/>
-  <rect width="64" height="64" rx="16" stroke="#FF2A85" stroke-width="2.5"/>
-  
-  <!-- Incline / Mountain slope -->
-  <path d="M8 52 L56 24" stroke="#38BDF8" stroke-width="3" stroke-linecap="round"/>
-  
-  <!-- Glowing Pink Boulder / Sphere of Sisyphus -->
-  <circle cx="38" cy="24" r="11" fill="#FF2A85"/>
-  <circle cx="38" cy="24" r="11" stroke="#FDF2F8" stroke-width="2"/>
-  <circle cx="34" cy="20" r="3.5" fill="#FDE047"/>
-  
-  <!-- Sisyphus Geometric Figure pushing -->
-  <path d="M22 45 L28 35 L33 30" stroke="#FDF2F8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M22 45 L18 52" stroke="#FDF2F8" stroke-width="3.5" stroke-linecap="round"/>
-  <path d="M28 35 L26 43" stroke="#FDF2F8" stroke-width="3" stroke-linecap="round"/>
-  <!-- Figure Head -->
-  <circle cx="27" cy="26" r="4" fill="#FDE047"/>
-  
-  <!-- Kinetic Motion Lines -->
-  <path d="M48 16 L52 14" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
-  <path d="M46 22 L51 21" stroke="#FDE047" stroke-width="2" stroke-linecap="round"/>
-  <path d="M42 12 L45 9" stroke="#38BDF8" stroke-width="2" stroke-linecap="round"/>
+  <rect width="64" height="64" rx="16" stroke="#FF2A85" stroke-width="2"/>
+  <circle cx="32" cy="32" r="26" fill="url(#auroraGlow)"/>
+
+  <!-- Flowing Aurora Light Ribbons (Wave 1) -->
+  <path d="M10 46 C 20 28, 28 50, 40 32 C 48 20, 52 26, 56 16" 
+        stroke="url(#auroraGrad)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Flowing Aurora Light Ribbons (Wave 2 - Pink & Cyan) -->
+  <path d="M12 52 C 22 36, 32 46, 44 26 C 50 16, 54 22, 58 14" 
+        stroke="#FF2A85" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+
+  <!-- Ethereal Northern Star / AI Diamond Pulse -->
+  <path d="M38 12 L41 20 L49 23 L41 26 L38 34 L35 26 L27 23 L35 20 Z" 
+        fill="#FDE047"/>
+  <circle cx="38" cy="23" r="2" fill="#FFFFFF"/>
+
+  <!-- Dynamic Harmonic Nodes -->
+  <circle cx="16" cy="40" r="2.5" fill="#38BDF8"/>
+  <circle cx="28" cy="42" r="2" fill="#FF2A85"/>
+  <circle cx="48" cy="24" r="2" fill="#22C55E"/>
 </svg>

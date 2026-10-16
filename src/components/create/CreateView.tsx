@@ -292,13 +292,13 @@ export const CreateView: React.FC<CreateViewProps> = ({ defaultVoiceId, onJobCre
           >
             {submitting ? (
               <>
-                <RefreshCw className="w-5 h-5 animate-spin" aria-hidden="true" />
+                <RefreshCw className="w-5 h-5 animate-spin" />
                 <span>Initiating Production Pipeline...</span>
               </>
             ) : (
               <>
                 <Play className="w-5 h-5 fill-black" />
-                Launch Sisyphus Video Pipeline
+                Launch Aurora.ai Video Pipeline
               </>
             )}
           </button>
