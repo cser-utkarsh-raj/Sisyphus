@@ -1,0 +1,28 @@
+name: Sisyphus CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: Type-check
+        run: npm run lint
+      - name: Build frontend
+        run: npm run build
+      - name: Run video engine self-tests
+        run: npm run test:video-engine
