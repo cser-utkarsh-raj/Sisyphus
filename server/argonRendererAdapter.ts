@@ -108,6 +108,12 @@ export async function renderAndEncodeMp4(params: RenderVideoParams): Promise<{
     duration: Math.min(59.9, Math.max(0.5, audioDurationMs / 1000)),
     narration: script.fullNarration,
     scenes,
+    wordTimings: params.subtitles.flatMap((line) => line.words.map((word) => ({
+      word: word.word,
+      start: Math.max(0, word.startMs / 1000),
+      end: Math.max(0, word.endMs / 1000),
+      aligned: false,
+    }))),
   };
 
   const result = await renderVideo({
