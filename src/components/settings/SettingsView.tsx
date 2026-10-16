@@ -160,7 +160,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSettingsSaved }) =
           </div>
 
           <p className="text-xs text-zinc-400 font-sans leading-relaxed">
-            When enabled, Sisyphus runs unattended at the configured UTC time, verifies duplicate topics, renders the code-driven video, and dispatches to enabled social channels.
+            When enabled, Aurora.ai runs unattended at the configured UTC time, verifies duplicate topics, renders the code-driven video, and dispatches to enabled social channels.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">

@@ -7,7 +7,7 @@ import {
   Share2,
   Settings,
 } from 'lucide-react';
-import { SisyphusLogo } from '../common/SisyphusLogo.tsx';
+import { AuroraLogo } from '../common/AuroraLogo.tsx';
 
 export type NavTab = 'create' | 'pipeline' | 'library' | 'voices' | 'connections' | 'settings';
 
@@ -35,12 +35,12 @@ export const Navbar: React.FC<NavbarProps> = ({
     <header className="border-b-2 border-black bg-[#0d0c14] sticky top-0 z-50 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-3">
-          {/* Logo & Brand with Sisyphus Emblem */}
+          {/* Logo & Brand with Aurora.ai Emblem */}
           <div
             onClick={() => onTabChange('voices')}
             className="cursor-pointer"
           >
-            <SisyphusLogo size="md" showSubtitle={true} />
+            <AuroraLogo size="md" showSubtitle={true} />
           </div>
 
           {/* Navigation Tabs */}

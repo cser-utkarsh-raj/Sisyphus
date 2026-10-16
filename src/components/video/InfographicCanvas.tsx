@@ -323,9 +323,9 @@ export const InfographicCanvas: React.FC<InfographicCanvasProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'sisyphus_soundtrack_38s.wav';
+    a.download = 'aurora_soundtrack_38s.wav';
     a.click();
-    showToast('Downloaded sisyphus_soundtrack_38s.wav (44.1kHz Stereo PCM)!');
+    showToast('Downloaded aurora_soundtrack_38s.wav (44.1kHz Stereo PCM)!');
   };
 
   // Export Current 1080x1920 Frame as PNG
@@ -333,7 +333,7 @@ export const InfographicCanvas: React.FC<InfographicCanvasProps> = ({
     if (!canvasRef.current) return;
     const fNum = Math.round(currentTime * FPS);
     const link = document.createElement('a');
-    link.download = `sisyphus_1080x1920_frame_${String(fNum).padStart(4, '0')}.png`;
+    link.download = `aurora_1080x1920_frame_${String(fNum).padStart(4, '0')}.png`;
     link.href = canvasRef.current.toDataURL('image/png');
     link.click();
     showToast(`Downloaded 1080×1920 PNG frame #${fNum}!`);

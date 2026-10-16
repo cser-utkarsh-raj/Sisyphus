@@ -84,7 +84,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#ff2a85]" />
-            <span className="text-zinc-300 font-bold">SISYPHUS</span> — Automated Short-Form Video Production Pipeline
+            <span className="text-zinc-300 font-bold">AURORA.AI</span> — Automated Short-Form Video Production Pipeline
           </div>
           <div className="flex items-center gap-4 text-zinc-400">
             <span>9:16 Vertical (1080×1920)</span>

@@ -293,7 +293,7 @@ export const CreateView: React.FC<CreateViewProps> = ({ defaultVoiceId, onJobCre
             ) : (
               <>
                 <Play className="w-5 h-5 fill-black" />
-                Launch Sisyphus Video Pipeline
+                Launch Aurora.ai Video Pipeline
               </>
             )}
           </button>

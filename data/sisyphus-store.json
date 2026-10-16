@@ -1,7 +1,7 @@
 {
   "jobs": [
     {
-      "id": "sisyphus-demo-paradox",
+      "id": "aurora-demo-paradox",
       "topic": "The Quantum Immortality Paradox",
       "creativePrompt": "Examine the many-worlds interpretation thought experiment regarding subjective observer survival.",
       "style": "cyber_brutalist_pink",
@@ -133,12 +133,12 @@
         "topic": "The Quantum Immortality Paradox",
         "hook": "Stop scrolling. What if you literally cannot experience your own demise?",
         "callToAction": "Hit follow to question reality daily.",
-        "description": "A deep-dive into the Many-Worlds quantum suicide thought experiment. Produced with Sisyphus code-driven video engine.",
+        "description": "A deep-dive into the Many-Worlds quantum suicide thought experiment. Produced with Aurora.ai code-driven video engine.",
         "hashtags": [
           "#QuantumPhysics",
           "#Paradox",
           "#MindBlowing",
-          "#Sisyphus",
+          "#AuroraAI",
           "#Shorts"
         ],
         "targetDurationSec": 32,
@@ -687,7 +687,7 @@
           "In Meta for Developers, register an app and add the Instagram Graph API.",
           "Generate a Page Access Token with instagram_content_publish permission.",
           "Enter INSTAGRAM_ACCESS_TOKEN and INSTAGRAM_BUSINESS_ACCOUNT_ID.",
-          "Sisyphus uses the official container-based video upload flow."
+          "Aurora.ai uses the official container-based video upload flow."
         ],
         "docsUrl": "https://developers.facebook.com/docs/instagram-platform/instagram-graph-api/content-publishing"
       }
@@ -710,7 +710,7 @@
           "In Meta App Dashboard, enable Pages API and Video Upload permissions.",
           "Obtain a long-lived Page Access Token with publish_video permission.",
           "Provide FACEBOOK_PAGE_ID and FACEBOOK_PAGE_ACCESS_TOKEN.",
-          "Sisyphus calls POST /{page-id}/video_reels to create and publish Reels."
+          "Aurora.ai calls POST /{page-id}/video_reels to create and publish Reels."
         ],
         "docsUrl": "https://developers.facebook.com/docs/video-api/guides/reels-publishing"
       }
@@ -725,7 +725,7 @@
     "targetFps": 30,
     "maxDurationSec": 59,
     "defaultHashtags": [
-      "#Sisyphus",
+      "#AuroraAI",
       "#MindBending",
       "#Science",
       "#Infographic",

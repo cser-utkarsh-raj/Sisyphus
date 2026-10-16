@@ -100,7 +100,7 @@ export const INITIAL_CONNECTIONS: ConnectionConfig[] = [
         'In Meta for Developers, register an app and add the Instagram Graph API.',
         'Generate a Page Access Token with instagram_content_publish permission.',
         'Enter INSTAGRAM_ACCESS_TOKEN and INSTAGRAM_BUSINESS_ACCOUNT_ID.',
-        'Sisyphus uses the official container-based video upload flow.',
+        'Aurora.ai uses the official container-based video upload flow.',
       ],
       docsUrl: 'https://developers.facebook.com/docs/instagram-platform/instagram-graph-api/content-publishing',
     },
@@ -119,7 +119,7 @@ export const INITIAL_CONNECTIONS: ConnectionConfig[] = [
         'In Meta App Dashboard, enable Pages API and Video Upload permissions.',
         'Obtain a long-lived Page Access Token with publish_video permission.',
         'Provide FACEBOOK_PAGE_ID and FACEBOOK_PAGE_ACCESS_TOKEN.',
-        'Sisyphus calls POST /{page-id}/video_reels to create and publish Reels.',
+        'Aurora.ai calls POST /{page-id}/video_reels to create and publish Reels.',
       ],
       docsUrl: 'https://developers.facebook.com/docs/video-api/guides/reels-publishing',
     },
@@ -127,7 +127,7 @@ export const INITIAL_CONNECTIONS: ConnectionConfig[] = [
 ];
 
 export const INITIAL_DEMO_JOB: Job = {
-  id: 'sisyphus-demo-paradox',
+  id: 'aurora-demo-paradox',
   topic: 'The Quantum Immortality Paradox',
   creativePrompt: 'Examine the many-worlds interpretation thought experiment regarding subjective observer survival.',
   style: 'cyber_brutalist_pink',
@@ -155,8 +155,8 @@ export const INITIAL_DEMO_JOB: Job = {
     topic: 'The Quantum Immortality Paradox',
     hook: 'Stop scrolling. What if you literally cannot experience your own demise?',
     callToAction: 'Hit follow to question reality daily.',
-    description: 'A deep-dive into the Many-Worlds quantum suicide thought experiment. Produced with Sisyphus code-driven video engine.',
-    hashtags: ['#QuantumPhysics', '#Paradox', '#MindBlowing', '#Sisyphus', '#Shorts'],
+    description: 'A deep-dive into the Many-Worlds quantum suicide thought experiment. Produced with Aurora.ai code-driven video engine.',
+    hashtags: ['#QuantumPhysics', '#Paradox', '#MindBlowing', '#AuroraAI', '#Shorts'],
     targetDurationSec: 32,
     estimatedDurationSec: 31.8,
     fullNarration: 'Stop scrolling. What if you literally cannot experience your own demise? According to the Many-Worlds interpretation of quantum mechanics, every branching probability spawns a parallel reality. In ninety-nine percent of branches, the observer ceases to exist. But your subjective consciousness can only ever awaken in the surviving branch. Leaving one haunting paradox: from your own perspective, are you immortal?',
@@ -366,7 +366,7 @@ export const INITIAL_SETTINGS: AppSettings = {
   outputResolution: '1080x1920',
   targetFps: 30,
   maxDurationSec: 59,
-  defaultHashtags: ['#Sisyphus', '#MindBending', '#Science', '#Infographic', '#DidYouKnow'],
+  defaultHashtags: ['#AuroraAI', '#MindBending', '#Science', '#Infographic', '#DidYouKnow'],
   dailySchedule: {
     enabled: false,
     timeOfDayUtc: '09:00',
