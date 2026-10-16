@@ -1,0 +1,3 @@
+## 2023-10-15 - Form and Button Accessibility in CreateView
+**Learning:** Found that form inputs lacked explicit `htmlFor`/`id` associations and the submit button lacked proper disabled visual states (cursor, opacity, hover/active styles) and a loading indicator during async submission. Also, grouped inputs needed `role="group"` and `aria-labelledby`.
+**Action:** Added explicit IDs for form elements, `role="group"` with `aria-labelledby` for grouped elements, and comprehensive disabled states in Tailwind (`disabled:opacity-70 disabled:cursor-not-allowed`) along with a loading spinner icon during form submission to improve feedback.
