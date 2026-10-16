@@ -1,0 +1,19 @@
+Files changed:
+- `src/components/create/CreateView.tsx`
+- `.Jules/palette.md` (was already in main via PR #2)
+
+Accessibility & UX improvements:
+- Mapped topic, creative prompt, duration slider, voice selector, and style selector properly using `id` and `htmlFor`.
+- Wrapped the platforms list in a grouped accessibility container using `role="group"` and `aria-labelledby`.
+- Styled the submit button's disabled state with reduced opacity, a not-allowed cursor, and stripped its standard active/hover pseudo classes.
+- Used an animated `RefreshCw` loading spinner while submitting, along with `aria-hidden="true"` to hide it from screen readers.
+
+Reconciliation approach:
+The main branch already contained most of PR #2's changes (via commit 87cd8da), including the button disable styling and `.Jules/palette.md`, but lacked the input `id`/`htmlFor` pairings, the `aria-hidden` attribute on the spinner, and the `role="group"` setup for checkboxes requested by PR #1. I implemented these missing elements on top of `main`.
+
+Verification results:
+- `pnpm lint`: Pass (`tsc --noEmit` exited successfully)
+- `pnpm build`: Pass (`vite build` compiled everything without issues)
+- No testing framework setup (no tests script).
+
+Next steps: Push the `main` branch to remote.
