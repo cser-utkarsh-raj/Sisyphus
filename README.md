@@ -12,7 +12,7 @@ Sisyphus turns a topic into a narrated, scene-based video workflow: script and s
 - **Voice profiles** with four built-in options: Zephyr, Puck, Kore, and Fenrir.
 - **Visual styles** for infographic-oriented short-form videos.
 - **11-stage pipeline** with per-stage progress, logs, status, and retry-from-stage support.
-- **Word-level subtitle timing** and karaoke-style synchronization utilities.
+- **Karaoke-style subtitle timing utilities**; current timing is estimated from narration duration, not true acoustic forced alignment.
 - **Vertical video output** targeting 1080 × 1920 (9:16), 30 FPS, and a duration below 60 seconds.
 - **Pipeline and artifact library** for tracking jobs and accessing generated outputs.
 - **Connection and settings screens** for configuring platform preferences and defaults.
@@ -34,7 +34,7 @@ A job moves through these stages:
 10. Publish to selected platforms
 11. Record final status
 
-Jobs run asynchronously after creation. The UI can track progress and inspect stage logs; failed stages can be retried where supported.
+Jobs run asynchronously after creation. The UI can track progress and inspect stage logs; failed stages can be retried where supported. Scene-plan validation is recorded separately; the rendering engine performs motion-graphic rendering, subtitle compositing, audio muxing, encoding, and output verification during the compositing stage.
 
 ## Tech stack
 
@@ -45,7 +45,7 @@ Jobs run asynchronously after creation. The UI can track progress and inspect st
 | Backend/API | Node.js, Express, TypeScript |
 | AI | Google Gemini via `@google/genai` |
 | Video processing | FFmpeg-based rendering and encoding |
-| Persistence | Local JSON store and generated files |
+| Persistence | Local JSON store and generated files (single-instance/local deployment only) |
 | Build checks | TypeScript type-checking and Vite production build |
 
 ## Requirements
@@ -131,8 +131,10 @@ Some integrations may require additional permissions, OAuth setup, account eligi
 
 - **YouTube:** With `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, and `YOUTUBE_REFRESH_TOKEN`, Sisyphus uploads the generated MP4 through the YouTube resumable upload API. Uploads default to **private**; change visibility in YouTube Studio after verifying the result.
 - **Instagram Reels:** Requires `INSTAGRAM_ACCESS_TOKEN`, `INSTAGRAM_BUSINESS_ACCOUNT_ID`, and a publicly reachable HTTPS `APP_URL`. Meta fetches the rendered MP4 from the job's artifact URL, processes the media container, and the publisher waits for processing to finish before calling `media_publish`. The artifact URL must be accessible to Meta without local-only networking or authentication barriers.
-- **Facebook Reels:** The current code can initialize an upload session but does not yet transfer and finish the video upload. It reports failure instead of falsely marking the Reel as published.
+- **Facebook Reels:** The publisher now initializes a Reels upload, transfers the actual MP4 bytes, calls the finish/publish phase, and verifies that Graph API can resolve the resulting video. This still needs a credentialed live test on an eligible Facebook Page.
+- Missing Gemini credentials or failed script/TTS requests now fail the job instead of silently substituting a fabricated script or tone audio. Set `SISYPHUS_ALLOW_DEMO_FALLBACK=true` only for local demos; do not enable it for production.
 - Missing credentials, API errors, missing media IDs, and unfinished processing are failures—not simulated success. A connection marked connected in the UI does not substitute for valid server-side credentials.
+- YouTube uploads are checked with a follow-up `videos.list` request. Instagram waits for container processing to finish before publishing. Facebook's three upload phases are implemented, but all social publishers still require live account-level verification.
 
 ## Data and generated files
 
