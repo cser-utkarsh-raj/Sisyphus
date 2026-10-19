@@ -9,7 +9,7 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,6 +17,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
       - name: Install dependencies
         run: npm install
       - name: Type-check
@@ -24,4 +28,4 @@ jobs:
       - name: Build frontend
         run: npm run build
       - name: Run video engine self-tests
-        run: npm run test:video-engine
+        run: npm test
