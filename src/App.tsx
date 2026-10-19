@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar, type NavTab } from './components/layout/Navbar.tsx';
+import { DotFooter } from './components/layout/DotFooter.tsx';
 import { VoicesView } from './components/voices/VoicesView.tsx';
 import { CreateView } from './components/create/CreateView.tsx';
 import { PipelineView } from './components/pipeline/PipelineView.tsx';
@@ -79,22 +80,10 @@ export default function App() {
         {activeTab === 'settings' && <SettingsView />}
       </main>
 
-      {/* Bottom Footer */}
-      <footer className="border-t-2 border-black bg-[#0d0c14] py-6 text-xs text-zinc-500 font-mono mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#ff2a85]" />
-            <span className="text-zinc-300 font-bold">AURORA.AI</span> — Automated Short-Form Video Production Pipeline
-          </div>
-          <div className="flex items-center gap-4 text-zinc-400">
-            <span>9:16 Vertical (1080×1920)</span>
-            <span>•</span>
-            <span>Strictly &lt; 60s Duration</span>
-            <span>•</span>
-            <span>Karaoke Word Timing Sync</span>
-          </div>
-        </div>
-      </footer>
+      <DotFooter
+        onLibraryClick={() => setActiveTab('library')}
+        onCreateClick={() => setActiveTab('create')}
+      />
     </div>
   );
 }
