@@ -289,13 +289,38 @@ export async function generateSpeechAudio(
 
       const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       if (base64Audio) {
-        const buffer = Buffer.from(base64Audio, 'base64');
-        fs.writeFileSync(outputWavPath, buffer);
-
-        // Approximate duration from 24kHz 16-bit mono WAV size:
-        // sampleRate = 24000, bytesPerSample = 2 -> 48,000 bytes per second
-        const dataBytes = Math.max(0, buffer.length - 44);
-        const durationMs = Math.round((dataBytes / 48000) * 1000);
+        const audioBytes = Buffer.from(base64Audio, 'base64');
+        // Gemini may return raw PCM rather than a WAV container. Wrap raw 24 kHz,
+        // 16-bit mono PCM so downstream FFmpeg receives a valid WAV file.
+        const isWav = audioBytes.length >= 12 && audioBytes.toString('ascii', 0, 4) === 'RIFF'
+          && audioBytes.toString('ascii', 8, 12) === 'WAVE';
+        let wavBytes = audioBytes;
+        let pcmBytes = audioBytes;
+        if (!isWav) {
+          const header = Buffer.alloc(44);
+          header.write('RIFF', 0);
+          header.writeUInt32LE(36 + audioBytes.length, 4);
+          header.write('WAVE', 8);
+          header.write('fmt ', 12);
+          header.writeUInt32LE(16, 16);
+          header.writeUInt16LE(1, 20);
+          header.writeUInt16LE(1, 22);
+          header.writeUInt32LE(24000, 24);
+          header.writeUInt32LE(48000, 28);
+          header.writeUInt16LE(2, 32);
+          header.writeUInt16LE(16, 34);
+          header.write('data', 36);
+          header.writeUInt32LE(audioBytes.length, 40);
+          wavBytes = Buffer.concat([header, audioBytes]);
+        } else {
+          pcmBytes = audioBytes.subarray(44);
+        }
+        fs.mkdirSync(path.dirname(outputWavPath), { recursive: true });
+        fs.writeFileSync(outputWavPath, wavBytes);
+        const durationMs = Math.round((pcmBytes.length / 48000) * 1000);
+        if (durationMs < 250 || durationMs > 60000) {
+          throw new Error(`Gemini returned invalid narration duration: ${durationMs}ms.`);
+        }
         return { durationMs, wavPath: outputWavPath };
       }
     } catch (err) {
