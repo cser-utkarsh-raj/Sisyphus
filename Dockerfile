@@ -13,7 +13,7 @@ RUN apt-get update \
     && ffprobe -version
 
 COPY package.json ./
-RUN npm install
+RUN npm install --include=dev
 
 COPY . .
 RUN npm run lint && npm run build && npm test
