@@ -233,15 +233,70 @@ export async function publishToFacebookReels(job: Job): Promise<PublishResult> {
         }
       );
       const initData = await initRes.json();
-      if (!initRes.ok || !initData.video_id) {
-        throw new Error(initData.error?.message || 'Failed to initialize Facebook Reel upload session');
+      if (!initRes.ok || !initData.video_id || !initData.upload_url) {
+        throw new Error(initData.error?.message || 'Facebook did not return a video ID and upload URL.');
+      }
+
+      // Phase 2: transfer the actual MP4 bytes. Starting a session alone is not publication.
+      const videoName = path.basename(job.videoUrl || '');
+      const videoPath = path.join(getArtifactsPath(), job.id, videoName);
+      if (!videoName || !fs.existsSync(videoPath)) {
+        throw new Error('Rendered MP4 not found; refusing to publish an empty Facebook Reel.');
+      }
+      const videoBytes = fs.readFileSync(videoPath);
+      const transferRes = await fetch(initData.upload_url, {
+        method: 'POST',
+        headers: {
+          Authorization: `OAuth ${pageToken}`,
+          offset: '0',
+          file_size: String(videoBytes.byteLength),
+          'Content-Type': 'application/octet-stream',
+        },
+        body: videoBytes,
+      });
+      if (!transferRes.ok) {
+        throw new Error(`Facebook Reel binary transfer failed (${transferRes.status}): ${await transferRes.text()}`);
+      }
+
+      // Phase 3: ask Meta to publish the uploaded video.
+      const finishRes = await fetch(`https://graph.facebook.com/v21.0/${pageId}/video_reels`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          upload_phase: 'finish',
+          video_id: initData.video_id,
+          video_state: 'PUBLISHED',
+          description: formatted.caption,
+          access_token: pageToken,
+        }),
+      });
+      const finishData = await finishRes.json().catch(() => ({})) as { success?: boolean; error?: { message?: string } };
+      if (!finishRes.ok || finishData.success === false) {
+        throw new Error(finishData.error?.message || `Facebook Reel finish phase failed (${finishRes.status}).`);
+      }
+
+      // Verify that Graph API can resolve the uploaded video before reporting success.
+      const verifyRes = await fetch(
+        `https://graph.facebook.com/v21.0/${initData.video_id}?fields=id,status,permalink_url&access_token=${encodeURIComponent(pageToken)}`
+      );
+      const verifyData = await verifyRes.json().catch(() => ({})) as {
+        id?: string;
+        permalink_url?: string;
+        status?: { video_status?: string };
+        error?: { message?: string };
+      };
+      if (!verifyRes.ok || !verifyData.id) {
+        throw new Error(verifyData.error?.message || 'Facebook could not verify the uploaded Reel.');
+      }
+      if (verifyData.status?.video_status && !['ready', 'published', 'processing'].includes(verifyData.status.video_status.toLowerCase())) {
+        throw new Error(`Facebook Reel is not in a publishable state: ${verifyData.status.video_status}`);
       }
 
       return {
         platform: 'facebook',
         success: true,
         publicationId: initData.video_id,
-        publicationUrl: `https://facebook.com/reel/${initData.video_id}`,
+        publicationUrl: verifyData.permalink_url || `https://facebook.com/reel/${initData.video_id}`,
       };
     }
 
