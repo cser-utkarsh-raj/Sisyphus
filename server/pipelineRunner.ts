@@ -130,7 +130,7 @@ export async function runJobPipeline(jobId: string, startFromStage?: PipelineSta
           if (!job.script || !job.audioDurationMs) {
             throw new Error('Narration audio or script missing for subtitle alignment.');
           }
-          stage.logs.push('Computing forced word alignments and karaoke line boundaries...');
+          stage.logs.push('Estimating word timings from narration duration; this is not acoustic forced alignment.');
           const wordTimings = estimateWordTimings(
             job.script.fullNarration,
             job.audioDurationMs,
@@ -145,29 +145,28 @@ export async function runJobPipeline(jobId: string, startFromStage?: PipelineSta
         }
 
         case 'render_scenes': {
-          if (!job.script) throw new Error('No scenes available for procedural rendering.');
-          stage.logs.push(`Building procedural vector scenes (${job.style})...`);
+          if (!job.script || job.script.scenes.length === 0) {
+            throw new Error('No scene plan available for rendering.');
+          }
+          stage.logs.push(`Validated ${job.script.scenes.length} scene plans for ${job.style}; rasterization and media assembly run in the next stage.`);
           job.script.scenes.forEach((scene) => {
-            stage.logs.push(`Compiled Scene #${scene.sceneNumber}: "${scene.title}" [${scene.visualType}]`);
+            if (!scene.narration.trim()) throw new Error(`Scene ${scene.sceneNumber} has no narration.`);
+            stage.logs.push(`Scene #${scene.sceneNumber}: "${scene.title}" [${scene.visualType}]`);
           });
           break;
         }
 
         case 'composite_media': {
-          stage.logs.push('Compositing visual scene transitions, kinetic text, and audio wave track...');
-          break;
-        }
-
-        case 'encode_mp4': {
+          if (!job.script || !job.audioDurationMs) throw new Error('Script and generated narration are required before rendering.');
           const wavFile = path.join(artifactsDir, 'narration.wav');
-          stage.logs.push('Encoding 9:16 vertical 1080x1920 MP4 at 30 FPS using FFmpeg libx264/AAC...');
+          stage.logs.push('Rendering scene motion graphics, compositing narration and subtitles, and encoding the MP4 with the video engine...');
 
           const renderResult = await renderAndEncodeMp4({
             jobId: job.id,
-            script: job.script!,
+            script: job.script,
             subtitles: job.subtitles || [],
             audioPath: wavFile,
-            audioDurationMs: job.audioDurationMs || 30000,
+            audioDurationMs: job.audioDurationMs,
             style: job.style,
             outputDir: artifactsDir,
           });
@@ -175,11 +174,20 @@ export async function runJobPipeline(jobId: string, startFromStage?: PipelineSta
           job.videoUrl = `/api/artifacts/${job.id}/${path.basename(renderResult.videoPath)}`;
           job.videoThumbnailUrl = `/api/artifacts/${job.id}/${path.basename(renderResult.thumbnailPath)}`;
           job.videoMetadata = renderResult.metadata;
-
-          stage.logs.push(
-            `Validated video stream: ${renderResult.metadata.width}x${renderResult.metadata.height}, ${renderResult.metadata.fps}fps, ${renderResult.metadata.durationSec}s duration.`
-          );
+          stage.logs.push(`Rendered and verified ${renderResult.metadata.width}x${renderResult.metadata.height} video at ${renderResult.metadata.fps} FPS, duration ${renderResult.metadata.durationSec}s.`);
           stage.logs.push(`File size: ${(renderResult.metadata.fileSizeBytes / 1024 / 1024).toFixed(2)} MB`);
+          break;
+        }
+
+        case 'encode_mp4': {
+          stage.logs.push('Checking the encoded MP4 metadata and strict output constraints...');
+          if (!job.videoUrl || !job.videoMetadata?.isValidated) {
+            throw new Error('The renderer did not produce a validated MP4 artifact.');
+          }
+          if (job.videoMetadata.width !== 1080 || job.videoMetadata.height !== 1920 || job.videoMetadata.durationSec >= 60) {
+            throw new Error('Encoded MP4 failed the 1080x1920 / under-60-second output gate.');
+          }
+          stage.logs.push('Encoded MP4 passed output metadata checks.');
           break;
         }
 
