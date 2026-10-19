@@ -1,6 +1,8 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import type { Job, PlatformPublishStatus, TargetPlatform } from '../src/types/pipeline.ts';
 import { formatPlatformMetadata } from '../src/utils/platforms.ts';
-import { loadDatabase } from './db.ts';
+import { getArtifactsPath, loadDatabase } from './db.ts';
 
 export interface PublishResult {
   platform: TargetPlatform;
@@ -20,7 +22,7 @@ export async function publishToYouTubeShorts(job: Job): Promise<PublishResult> {
   const refreshToken = process.env.YOUTUBE_REFRESH_TOKEN;
 
   // Check if real credentials or active connection token exists
-  const isConfigured = Boolean((clientId && refreshToken) || (conn && conn.connected));
+  const isConfigured = Boolean(clientId && process.env.YOUTUBE_CLIENT_SECRET && refreshToken);
 
   if (!isConfigured) {
     return {
@@ -62,51 +64,26 @@ export async function publishToYouTubeShorts(job: Job): Promise<PublishResult> {
       const tokenData = await tokenRes.json();
       const accessToken = tokenData.access_token;
 
-      // In production, initiate multipart or resumable upload to https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status
-      // For now, if accessToken exists, we perform metadata initialization:
-      const metaRes = await fetch(
-        'https://www.googleapis.com/youtube/v3/videos?part=snippet,status',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            snippet: {
-              title: formatted.title,
-              description: formatted.caption,
-              tags: formatted.tags,
-              categoryId: '28', // Science & Technology
-            },
-            status: {
-              privacyStatus: 'public',
-              selfDeclaredMadeForKids: false,
-            },
-          }),
-        }
-      );
-
-      if (metaRes.ok) {
-        const uploadData = await metaRes.json();
-        const videoId = uploadData.id || `yt-${Date.now()}`;
-        return {
-          platform: 'youtube',
-          success: true,
-          publicationId: videoId,
-          publicationUrl: `https://youtube.com/shorts/${videoId}`,
-        };
-      }
+      if (!accessToken) throw new Error('OAuth token response did not include access_token.');
+      const videoName = path.basename(job.videoUrl || '');
+      const videoPath = path.join(getArtifactsPath(), job.id, videoName);
+      if (!videoName || !fs.existsSync(videoPath)) throw new Error('Rendered MP4 not found; refusing metadata-only upload.');
+      const bytes = fs.readFileSync(videoPath);
+      const init = await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json; charset=UTF-8', 'X-Upload-Content-Length': String(bytes.byteLength), 'X-Upload-Content-Type': 'video/mp4' },
+        body: JSON.stringify({ snippet: { title: formatted.title, description: formatted.caption + '\n\n#Shorts', tags: formatted.tags, categoryId: '28' }, status: { privacyStatus: 'private', selfDeclaredMadeForKids: false } }),
+      });
+      if (!init.ok) throw new Error('YouTube upload initialization failed (' + init.status + '): ' + await init.text());
+      const uploadUrl = init.headers.get('location');
+      if (!uploadUrl) throw new Error('YouTube did not return a resumable upload URL.');
+      const uploadedRes = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Type': 'video/mp4', 'Content-Length': String(bytes.byteLength) }, body: bytes });
+      if (!uploadedRes.ok) throw new Error('YouTube binary upload failed (' + uploadedRes.status + '): ' + await uploadedRes.text());
+      const uploaded = await uploadedRes.json() as { id?: string };
+      if (!uploaded.id) throw new Error('YouTube upload response did not include a video ID.');
+      return { platform: 'youtube', success: true, publicationId: uploaded.id, publicationUrl: 'https://youtube.com/shorts/' + uploaded.id };
     }
-
-    // Connected state
-    const simulatedId = `SH-${Date.now().toString(36).toUpperCase()}`;
-    return {
-      platform: 'youtube',
-      success: true,
-      publicationId: simulatedId,
-      publicationUrl: `https://youtube.com/shorts/${simulatedId}`,
-    };
+    throw new Error('YouTube upload is not configured. No simulated publication is reported.');
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return {
@@ -126,7 +103,7 @@ export async function publishToInstagramReels(job: Job): Promise<PublishResult> 
   const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
   const businessId = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID;
 
-  const isConfigured = Boolean((accessToken && businessId) || (conn && conn.connected));
+  const isConfigured = Boolean(accessToken && businessId);
 
   if (!isConfigured) {
     return {
@@ -155,6 +132,12 @@ export async function publishToInstagramReels(job: Job): Promise<PublishResult> 
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             media_type: 'REELS',
+            video_url: (() => {
+              const base = process.env.APP_URL;
+              if (!base || !/^https:\/\//i.test(base)) throw new Error('APP_URL must be a public HTTPS origin so Meta can fetch the video.');
+              if (!job.videoUrl?.startsWith('/')) throw new Error('Job has no rendered video URL.');
+              return new URL(job.videoUrl, base).toString();
+            })(),
             caption: formatted.caption,
             access_token: accessToken,
           }),
@@ -180,7 +163,8 @@ export async function publishToInstagramReels(job: Job): Promise<PublishResult> 
         }
       );
       const publishData = await publishRes.json();
-      const reelId = publishData.id || containerId;
+      if (!publishRes.ok || !publishData.id) throw new Error(publishData.error?.message || 'Instagram did not confirm publication.');
+      const reelId = publishData.id;
 
       return {
         platform: 'instagram',
@@ -190,13 +174,7 @@ export async function publishToInstagramReels(job: Job): Promise<PublishResult> 
       };
     }
 
-    const reelId = `C${Math.random().toString(36).substring(2, 11)}`;
-    return {
-      platform: 'instagram',
-      success: true,
-      publicationId: reelId,
-      publicationUrl: `https://www.instagram.com/reel/${reelId}/`,
-    };
+    throw new Error('Instagram publishing did not complete. No simulated publication is reported.');
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return {
@@ -216,7 +194,7 @@ export async function publishToFacebookReels(job: Job): Promise<PublishResult> {
   const pageToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
   const pageId = process.env.FACEBOOK_PAGE_ID;
 
-  const isConfigured = Boolean((pageToken && pageId) || (conn && conn.connected));
+  const isConfigured = Boolean(pageToken && pageId);
 
   if (!isConfigured) {
     return {
@@ -262,13 +240,7 @@ export async function publishToFacebookReels(job: Job): Promise<PublishResult> {
       };
     }
 
-    const fbReelId = `${Date.now()}_reel`;
-    return {
-      platform: 'facebook',
-      success: true,
-      publicationId: fbReelId,
-      publicationUrl: `https://facebook.com/reel/${fbReelId}`,
-    };
+    throw new Error('Facebook upload session is not a completed upload. Binary transfer and finish phases are not implemented; refusing to report success.');
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return {
