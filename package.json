@@ -11,9 +11,7 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "test:video-engine": "tsx server/sisyphus-video-engine.ts --self-test",
-    "test": "tsx server/sisyphus-video-engine.ts --self-test",
-    "render-sample": "tsx scripts/render-sample.ts",
-    "upload-sample": "tsx scripts/upload-video.ts"
+    "test": "tsx server/sisyphus-video-engine.ts --self-test"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
