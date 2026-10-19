@@ -64,6 +64,23 @@ pnpm --version
 ffmpeg -version
 ```
 
+## Deploy the backend with FFmpeg
+
+The video renderer requires both `ffmpeg` and `ffprobe` to exist as operating-system executables on the **backend runtime's PATH**. Installing JavaScript dependencies does not install these binaries. If the job log says `/bin/sh: ffmpeg: not found`, the deployed backend image does not contain FFmpeg.
+
+This repository now includes a `Dockerfile` that installs FFmpeg/FFprobe, verifies both commands, builds the frontend, runs the engine self-tests, and starts the Express server with `tsx`. It also includes a `render.yaml` blueprint for a Docker-based Render web service.
+
+### Render deployment
+
+1. Push the latest `main` branch and create a new Blueprint instance from this repository in Render, or create a Web Service using the Docker runtime and the repository's `Dockerfile`.
+2. Set `GEMINI_API_KEY` in the service environment. Set `APP_URL` to the deployed public HTTPS origin (for example, your Render service URL) for integrations that need it.
+3. Deploy, then open `/api/health` on the service. A healthy HTTP response confirms the server is running; it does **not** by itself confirm video rendering.
+4. Run a real short test job and verify that the Encode & Verify MP4 stage succeeds. The deployment logs should show that FFmpeg and FFprobe are available during image build.
+
+**Important:** a Dockerfile only takes effect on platforms configured to build and run this repository as a Docker service. If your current host is a static-site deployment or a managed workspace that ignores Dockerfiles, redeploy the Express backend using Docker or configure that host's system packages to install FFmpeg. A Vercel static frontend alone is not a suitable runtime for this long-running FFmpeg worker.
+
+The current job store and artifacts are local filesystem-based. Before relying on restarts, multiple instances, or production publishing, configure persistent storage and a durable job database/object store; this Docker setup solves the missing executable, not that separate persistence issue.
+
 ## Run locally
 
 ### 1. Clone and install
