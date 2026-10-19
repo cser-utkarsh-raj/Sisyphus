@@ -16,8 +16,6 @@ export interface PublishResult {
  * Publishes a finished video to YouTube Shorts using YouTube Data API v3
  */
 export async function publishToYouTubeShorts(job: Job): Promise<PublishResult> {
-  const db = loadDatabase();
-  const conn = db.connections.find((c) => c.platform === 'youtube');
   const clientId = process.env.YOUTUBE_CLIENT_ID;
   const refreshToken = process.env.YOUTUBE_REFRESH_TOKEN;
 
@@ -98,8 +96,6 @@ export async function publishToYouTubeShorts(job: Job): Promise<PublishResult> {
  * Publishes a finished video to Instagram Reels using the Meta Graph API Container workflow
  */
 export async function publishToInstagramReels(job: Job): Promise<PublishResult> {
-  const db = loadDatabase();
-  const conn = db.connections.find((c) => c.platform === 'instagram');
   const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
   const businessId = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID;
 
@@ -150,7 +146,18 @@ export async function publishToInstagramReels(job: Job): Promise<PublishResult> 
       }
 
       const containerId = createData.id;
-      // 2. Publish Container: POST /{ig-user-id}/media_publish?creation_id={containerId}
+      // Meta processes the video asynchronously; publish only after FINISHED.
+      let processingFinished = false;
+      for (let attempt = 0; attempt < 20; attempt++) {
+        const statusRes = await fetch('https://graph.facebook.com/v19.0/' + containerId + '?fields=status_code&access_token=' + encodeURIComponent(accessToken));
+        const statusData = await statusRes.json() as { status_code?: string; error?: { message?: string } };
+        if (!statusRes.ok) throw new Error(statusData.error?.message || 'Instagram container status check failed.');
+        if (statusData.status_code === 'FINISHED') { processingFinished = true; break; }
+        if (statusData.status_code === 'ERROR' || statusData.status_code === 'EXPIRED') throw new Error('Instagram media processing failed: ' + statusData.status_code);
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+      if (!processingFinished) throw new Error('Instagram media container did not finish processing before timeout.');
+      // Publish the completed container.
       const publishRes = await fetch(
         `https://graph.facebook.com/v19.0/${businessId}/media_publish`,
         {
@@ -189,8 +196,6 @@ export async function publishToInstagramReels(job: Job): Promise<PublishResult> 
  * Publishes a finished video to Facebook Reels using the Facebook Graph API Page Reels flow
  */
 export async function publishToFacebookReels(job: Job): Promise<PublishResult> {
-  const db = loadDatabase();
-  const conn = db.connections.find((c) => c.platform === 'facebook');
   const pageToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
   const pageId = process.env.FACEBOOK_PAGE_ID;
 
