@@ -127,6 +127,13 @@ The repository currently defines no dedicated `test` or `format` package script.
 
 Some integrations may require additional permissions, OAuth setup, account eligibility, or implementation work beyond setting environment variables. Consult the Connections screen and the official platform documentation before enabling them.
 
+### Publishing behavior and limitations
+
+- **YouTube:** With `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, and `YOUTUBE_REFRESH_TOKEN`, Sisyphus uploads the generated MP4 through the YouTube resumable upload API. Uploads default to **private**; change visibility in YouTube Studio after verifying the result.
+- **Instagram Reels:** Requires `INSTAGRAM_ACCESS_TOKEN`, `INSTAGRAM_BUSINESS_ACCOUNT_ID`, and a publicly reachable HTTPS `APP_URL`. Meta fetches the rendered MP4 from the job's artifact URL, processes the media container, and the publisher waits for processing to finish before calling `media_publish`. The artifact URL must be accessible to Meta without local-only networking or authentication barriers.
+- **Facebook Reels:** The current code can initialize an upload session but does not yet transfer and finish the video upload. It reports failure instead of falsely marking the Reel as published.
+- Missing credentials, API errors, missing media IDs, and unfinished processing are failures—not simulated success. A connection marked connected in the UI does not substitute for valid server-side credentials.
+
 ## Data and generated files
 
 The backend stores application state in:
