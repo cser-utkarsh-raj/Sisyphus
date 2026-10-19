@@ -1,5 +1,5 @@
 import React from 'react';
-import './dot-footer.css';
+import '../../dot-footer.css';
 
 interface DotFooterProps {
   onLibraryClick: () => void;
@@ -18,11 +18,11 @@ export function DotFooter({ onLibraryClick, onCreateClick }: DotFooterProps) {
           </div>
         </div>
 
-        <a className="dot-footer__attribution" href="https://github.com/cser-utkarsh-raj" target="_blank" rel="noreferrer" aria-label="Presented by .dot">
+        <div className="dot-footer__attribution" aria-label="Presented by .dot">
           <span className="dot-footer__eyebrow">Presented by</span>
           <img src="/dot-logo.svg" alt="" width="28" height="31" />
           <span className="dot-footer__wordmark">.dot</span>
-        </a>
+        </div>
 
         <nav className="dot-footer__links" aria-label="Footer navigation">
           <a href="https://github.com/cser-utkarsh-raj/Sisyphus" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
