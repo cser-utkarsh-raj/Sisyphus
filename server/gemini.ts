@@ -142,12 +142,15 @@ Provide a complete storyboard with narration for each scene, kinetic visual desc
         }
       }
     } catch (err) {
-      console.warn('Gemini API call returned an error, using procedural script generator fallback:', err);
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`Gemini script generation failed; no unverified procedural script will be substituted. ${message}`);
     }
   }
 
-  // High-fidelity procedural script generator
-  return generateProceduralScript(topic, creativePrompt, targetDurationSec, style);
+  if (process.env.SISYPHUS_ALLOW_DEMO_FALLBACK === 'true') {
+    return generateProceduralScript(topic, creativePrompt, targetDurationSec, style);
+  }
+  throw new Error('GEMINI_API_KEY is required. Script fallback is disabled unless SISYPHUS_ALLOW_DEMO_FALLBACK=true is explicitly set for local demos.');
 }
 
 /**
@@ -296,13 +299,12 @@ export async function generateSpeechAudio(
         return { durationMs, wavPath: outputWavPath };
       }
     } catch (err) {
-      console.warn('Gemini TTS failed or model not available, generating audio track via procedural synthesizer:', err);
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`Gemini speech generation failed. Synthetic tone fallback is disabled. ${message}`);
     }
   }
 
-  // Generate a valid synthesized audio track WAV file using pure Node.js buffer synthesis
-  // (Pulsed rhythmic carrier frequency with gentle ambient chord to represent speech track)
-  return createSynthesizedAudioFile(text, outputWavPath);
+  throw new Error('GEMINI_API_KEY is required for real narration. Synthetic tone fallback is disabled.');
 }
 
 /**
