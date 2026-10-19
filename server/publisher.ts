@@ -79,6 +79,19 @@ export async function publishToYouTubeShorts(job: Job): Promise<PublishResult> {
       if (!uploadedRes.ok) throw new Error('YouTube binary upload failed (' + uploadedRes.status + '): ' + await uploadedRes.text());
       const uploaded = await uploadedRes.json() as { id?: string };
       if (!uploaded.id) throw new Error('YouTube upload response did not include a video ID.');
+
+      // Verify that YouTube can resolve the uploaded ID before recording success.
+      const verifyRes = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=id,status,processingDetails&id=${encodeURIComponent(uploaded.id)}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      if (!verifyRes.ok) {
+        throw new Error(`YouTube post-upload verification failed (${verifyRes.status}): ${await verifyRes.text()}`);
+      }
+      const verifyData = await verifyRes.json() as { items?: Array<{ id?: string }> };
+      if (!verifyData.items?.some((item) => item.id === uploaded.id)) {
+        throw new Error('YouTube did not return the uploaded video during verification.');
+      }
       return { platform: 'youtube', success: true, publicationId: uploaded.id, publicationUrl: 'https://youtube.com/shorts/' + uploaded.id };
     }
     throw new Error('YouTube upload is not configured. No simulated publication is reported.');
@@ -222,7 +235,7 @@ export async function publishToFacebookReels(job: Job): Promise<PublishResult> {
     if (pageToken && pageId) {
       // Official Facebook Reels upload step 1: POST /{page-id}/video_reels
       const initRes = await fetch(
-        `https://graph.facebook.com/v19.0/${pageId}/video_reels`,
+        `https://graph.facebook.com/v21.0/${pageId}/video_reels`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
