@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Job, PlatformPublishStatus, TargetPlatform } from '../src/types/pipeline.ts';
 import { formatPlatformMetadata } from '../src/utils/platforms.ts';
-import { getArtifactsPath, loadDatabase } from './db.ts';
+import { getArtifactsPath } from './db.ts';
 
 export interface PublishResult {
   platform: TargetPlatform;
