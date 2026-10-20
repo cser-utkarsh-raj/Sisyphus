@@ -19,6 +19,9 @@ import * as fsp from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { deflateSync } from 'node:zlib';
+import { resolveFfmpegBinary, resolveFfprobeBinary } from './mediaTools.ts';
+
+export { resolveFfmpegBinary, resolveFfprobeBinary } from './mediaTools.ts';
 
 // ============================================================================
 // PART 0: ENGINE CONSTANTS & MACHINE-READABLE DEPENDENCY DECLARATION
@@ -3275,7 +3278,7 @@ function parseFrameRateFraction(rateStr?: string): number | undefined {
 
 export async function probeMediaFile(
   filePath: string,
-  ffprobeBinary: string = 'ffprobe'
+  ffprobeBinary: string = resolveFfprobeBinary()
 ): Promise<ProbedMediaMetadata> {
   let stat: fs.Stats;
   try {
@@ -3363,9 +3366,10 @@ export async function validateRenderedVideo(
   videoPath: string,
   options: ValidateRenderedVideoOptions = {}
 ): Promise<ProbedMediaMetadata> {
+  const ffprobeBin = options.ffprobeBinary ?? resolveFfprobeBinary();
   const metadata =
     options.preProbedMetadata ??
-    (await probeMediaFile(videoPath, options.ffprobeBinary ?? 'ffprobe'));
+    (await probeMediaFile(videoPath, ffprobeBin));
 
   const failures: string[] = [];
 
@@ -3478,8 +3482,8 @@ function isNormalizedStoryboard(
 }
 
 export async function renderVideo(request: RenderVideoRequest): Promise<RenderVideoResult> {
-  const ffmpegBin = request.ffmpegBinary ?? 'ffmpeg';
-  const ffprobeBin = request.ffprobeBinary ?? 'ffprobe';
+  const ffmpegBin = request.ffmpegBinary ?? resolveFfmpegBinary();
+  const ffprobeBin = request.ffprobeBinary ?? resolveFfprobeBinary();
   const report = (
     phase: RenderMilestonePhase,
     progressRatio: number,

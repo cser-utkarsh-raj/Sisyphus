@@ -70,12 +70,19 @@ The video renderer requires both `ffmpeg` and `ffprobe` to exist as operating-sy
 
 This repository now includes a `Dockerfile` that installs FFmpeg/FFprobe, verifies both commands, builds the frontend, runs the engine self-tests, and starts the Express server with `tsx`. It also includes a `render.yaml` blueprint for a Docker-based Render web service.
 
-### Render deployment
+### Google AI Studio & Cloud Run deployment
+
+1. The development sandbox in Google AI Studio includes `ffmpeg` and `ffprobe` pre-installed at `/usr/bin/ffmpeg` and `/usr/bin/ffprobe`. The engine automatically resolves these paths.
+2. In production deployments (such as Cloud Run containers or managed platforms), ensure the container image is built from the repository's `Dockerfile` which installs system packages `ffmpeg` and `ca-certificates`.
+3. If deployed on environments where binaries reside in custom locations, set the `FFMPEG_PATH` and `FFPROBE_PATH` environment variables (e.g. `FFMPEG_PATH=/usr/bin/ffmpeg` and `FFPROBE_PATH=/usr/bin/ffprobe`).
+4. Check `GET /api/health` after deployment. The response confirms whether both media tools are available and reports `mediaTools.renderingReady: true`.
+
+### Render / Docker container deployment
 
 1. Push the latest `main` branch and create a new Blueprint instance from this repository in Render, or create a Web Service using the Docker runtime and the repository's `Dockerfile`.
 2. Set `GEMINI_API_KEY` in the service environment. Set `APP_URL` to the deployed public HTTPS origin (for example, your Render service URL) for integrations that need it.
-3. Deploy, then open `/api/health` on the service. A healthy HTTP response confirms the server is running; it does **not** by itself confirm video rendering.
-4. Run a real short test job and verify that the Encode & Verify MP4 stage succeeds. The deployment logs should show that FFmpeg and FFprobe are available during image build.
+3. Deploy, then open `/api/health` on the service. A healthy HTTP response confirms the server is running; check `mediaTools.renderingReady` to verify that FFmpeg and FFprobe are available and operational.
+4. Run a test job and verify that the Render & Encode stage completes successfully.
 
 **Important:** a Dockerfile only takes effect on platforms configured to build and run this repository as a Docker service. If your current host is a static-site deployment or a managed workspace that ignores Dockerfiles, redeploy the Express backend using Docker or configure that host's system packages to install FFmpeg. A Vercel static frontend alone is not a suitable runtime for this long-running FFmpeg worker.
 

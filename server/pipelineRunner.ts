@@ -7,6 +7,7 @@ import { getArtifactsPath, getJobById, loadDatabase, saveJob } from './db.ts';
 import { generateScriptWithAi, generateSpeechAudio } from './gemini.ts';
 import { dispatchPublish } from './publisher.ts';
 import { renderAndEncodeMp4 } from './argonRendererAdapter.ts';
+import { assertMediaToolsAvailable, getMediaToolsStatus } from './mediaTools.ts';
 
 /**
  * Executes or resumes a job through the 11-stage pipeline.
@@ -64,9 +65,17 @@ export async function runJobPipeline(jobId: string, startFromStage?: PipelineSta
           if (!durCheck.valid) {
             throw new Error(durCheck.error);
           }
+
+          // Pre-flight check: ensure video encoding tools are operational before expensive generation
+          const mediaStatus = getMediaToolsStatus();
+          if (!mediaStatus.allAvailable) {
+            assertMediaToolsAvailable();
+          }
+
           stage.logs.push(`Topic: "${job.topic}" validated.`);
           stage.logs.push(`Target duration: ${job.targetDurationSec}s validated (strictly < 60s).`);
           stage.logs.push(`Selected Voice: ${job.voiceId}, Style: ${job.style}`);
+          stage.logs.push(`Verified media tools: FFmpeg (${mediaStatus.ffmpeg.version?.split(/\r?\n/)[0] || 'ready'}), FFprobe (${mediaStatus.ffprobe.version?.split(/\r?\n/)[0] || 'ready'})`);
           break;
         }
 

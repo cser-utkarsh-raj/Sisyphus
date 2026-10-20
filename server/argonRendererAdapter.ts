@@ -4,6 +4,11 @@ import {
   type ExistingScriptDataInput,
   type ExistingSceneInput,
 } from './sisyphus-video-engine.ts';
+import {
+  assertMediaToolsAvailable,
+  resolveFfmpegBinary,
+  resolveFfprobeBinary,
+} from './mediaTools.ts';
 
 export interface RenderVideoParams {
   jobId: string;
@@ -43,6 +48,7 @@ export async function renderAndEncodeMp4(params: RenderVideoParams): Promise<{
   thumbnailPath: string;
   metadata: VideoMetadata;
 }> {
+  assertMediaToolsAvailable();
   const { jobId, script, audioPath, audioDurationMs, style, outputDir } = params;
 
   const scenes: ExistingSceneInput[] = script.scenes.map((scene) => {
@@ -122,6 +128,8 @@ export async function renderAndEncodeMp4(params: RenderVideoParams): Promise<{
     outputDir,
     outputFileBasename: `${jobId}-video`,
     visualStyle: style,
+    ffmpegBinary: resolveFfmpegBinary(),
+    ffprobeBinary: resolveFfprobeBinary(),
     onProgress: (event) => {
       if (event.phase === 'completed' || event.phase === 'verifying-output') {
         console.info(`[SISYPHUS RENDER] ${Math.round(event.progressRatio * 100)}% ${event.message}`);
