@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import { spawnSync } from 'node:child_process';
 import { createServer as createViteServer } from 'vite';
 import { apiRouter } from './server/routes.ts';
 
@@ -12,9 +13,15 @@ async function startServer() {
   // Mount API endpoints
   app.use('/api', apiRouter);
 
-  // Health endpoint
+  // Health endpoint also reports media-tool availability so runtime mismatches are visible.
   app.get('/api/health', (_req, res) => {
-    res.json({ status: 'ok', product: 'Sisyphus', timestamp: new Date().toISOString() });
+    const ffmpeg = spawnSync('ffmpeg', ['-version'], { encoding: 'utf8' });
+    const ffprobe = spawnSync('ffprobe', ['-version'], { encoding: 'utf8' });
+    const mediaTools = {
+      ffmpeg: { available: !ffmpeg.error && ffmpeg.status === 0, version: ffmpeg.stdout?.split(/\r?\n/, 1)[0] || null, error: ffmpeg.error?.message || null },
+      ffprobe: { available: !ffprobe.error && ffprobe.status === 0, version: ffprobe.stdout?.split(/\r?\n/, 1)[0] || null, error: ffprobe.error?.message || null },
+    };
+    res.json({ status: 'ok', product: 'Sisyphus', timestamp: new Date().toISOString(), runtime: { node: process.version, platform: process.platform }, mediaTools });
   });
 
   const isProduction = process.env.NODE_ENV === 'production';
@@ -34,6 +41,15 @@ async function startServer() {
     app.use(vite.middlewares);
   }
 
+  const ffmpegCheck = spawnSync('ffmpeg', ['-version'], { encoding: 'utf8' });
+  const ffprobeCheck = spawnSync('ffprobe', ['-version'], { encoding: 'utf8' });
+  if (ffmpegCheck.error || ffmpegCheck.status !== 0 || ffprobeCheck.error || ffprobeCheck.status !== 0) {
+    console.error('[SISYPHUS] MEDIA RUNTIME MISCONFIGURED: ffmpeg and/or ffprobe is missing. Deploy using the repository Dockerfile or install both binaries in the backend runtime PATH.');
+    if (ffmpegCheck.error) console.error('[SISYPHUS] ffmpeg check:', ffmpegCheck.error.message);
+    if (ffprobeCheck.error) console.error('[SISYPHUS] ffprobe check:', ffprobeCheck.error.message);
+  } else {
+    console.log('[SISYPHUS] Media tools ready:', ffmpegCheck.stdout.split(/\r?\n/, 1)[0]);
+  }
   app.listen(port, '0.0.0.0', () => {
     console.log(`[SISYPHUS] Automated Video Production Pipeline listening on http://0.0.0.0:${port}`);
   });
