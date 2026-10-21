@@ -37,14 +37,14 @@ export const ConnectionsView: React.FC = () => {
     }
   };
 
-  const handleToggleConnect = async (platform: string, currentConnected: boolean) => {
+  const handleCheckConfiguration = async (platform: string) => {
     setTestingPlatform(platform);
     setActionError(null);
     try {
       const res = await fetch(`/api/connections/${platform}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ connected: !currentConnected }),
+        body: JSON.stringify({ connected: true }),
       });
       const result = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -144,7 +144,7 @@ export const ConnectionsView: React.FC = () => {
                   <button
                     type="button"
                     disabled={isTesting}
-                    onClick={() => handleToggleConnect(conn.platform, isConnected)}
+                    onClick={() => handleCheckConfiguration(conn.platform)}
                     className={`px-4 py-2 rounded-lg font-bold text-xs uppercase font-mono tracking-wider border-2 border-black transition-all ${
                       isConnected
                         ? 'bg-zinc-800 text-rose-300 hover:bg-rose-950/50'
@@ -153,10 +153,8 @@ export const ConnectionsView: React.FC = () => {
                   >
                     {isTesting ? (
                       <span className="flex items-center gap-1.5">
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Verifying...
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Checking...
                       </span>
-                    ) : isConnected ? (
-                      'Disconnect'
                     ) : (
                       'Check configuration'
                     )}
