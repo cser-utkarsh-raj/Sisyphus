@@ -49,7 +49,7 @@ export const LibraryView: React.FC = () => {
     a.href = url;
     a.download = `${selectedJob.id}-subtitles.srt`;
     a.click();
-    URL.revokeObjectURL(url);
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const handlePublishNow = async (platform: TargetPlatform) => {
@@ -64,11 +64,11 @@ export const LibraryView: React.FC = () => {
         body: JSON.stringify({ platform }),
       });
 
-      const result = await res.json();
-      if (result.status === 'published') {
-        setPublishFeedback(`Successfully published to ${platform.toUpperCase()}! Link: ${result.publicationUrl}`);
+      const result = await res.json().catch(() => ({}));
+      if (res.ok && result.success === true) {
+        setPublishFeedback(`Successfully published to ${platform.toUpperCase()}! Link: ${result.publicationUrl || 'Publication confirmed.'}`);
       } else {
-        setPublishFeedback(`Publish failed: ${result.error}`);
+        setPublishFeedback(`Publish failed: ${result.error || `Request failed (HTTP ${res.status}).`}`);
       }
       await fetchJobs();
     } catch (err: unknown) {

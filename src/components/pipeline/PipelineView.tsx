@@ -25,6 +25,7 @@ export const PipelineView: React.FC<PipelineViewProps> = ({ activeJobId, onSelec
   const [selectedJobId, setSelectedJobId] = useState<string | null>(activeJobId || null);
   const [loading, setLoading] = useState(false);
   const [retryingStage, setRetryingStage] = useState<string | null>(null);
+  const [retryError, setRetryError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchJobs();
@@ -44,9 +45,11 @@ export const PipelineView: React.FC<PipelineViewProps> = ({ activeJobId, onSelec
       if (res.ok) {
         const data: Job[] = await res.json();
         setJobs(data);
-        if (!selectedJobId && data.length > 0) {
-          setSelectedJobId(data[0].id);
-        }
+        // Use the latest state rather than the effect's initial closure; polling must not
+        // snap the user's selected job back to the first item every 2.5 seconds.
+        setSelectedJobId((current) =>
+          current && data.some((job) => job.id === current) ? current : (data[0]?.id ?? null)
+        );
       }
     } catch (err) {
       console.error('Failed to load jobs:', err);
@@ -58,15 +61,18 @@ export const PipelineView: React.FC<PipelineViewProps> = ({ activeJobId, onSelec
   const handleRetryStage = async (stageId: PipelineStageId) => {
     if (!currentJob) return;
     setRetryingStage(stageId);
+    setRetryError(null);
     try {
       const res = await fetch(`/api/jobs/${currentJob.id}/retry/${stageId}`, {
         method: 'POST',
       });
-      if (res.ok) {
-        await fetchJobs();
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload.error || `Retry failed (HTTP ${res.status}).`);
       }
+      await fetchJobs();
     } catch (err) {
-      console.error('Stage retry failed:', err);
+      setRetryError(err instanceof Error ? err.message : 'Stage retry failed.');
     } finally {
       setRetryingStage(null);
     }
@@ -135,6 +141,12 @@ export const PipelineView: React.FC<PipelineViewProps> = ({ activeJobId, onSelec
           </div>
         )}
       </div>
+
+      {retryError && (
+        <div role="alert" className="rounded-xl border border-rose-500/50 bg-rose-950/30 px-4 py-3 text-sm text-rose-200">
+          {retryError}
+        </div>
+      )}
 
       {!currentJob ? (
         <div className="text-center py-16 bg-[#12111c] border-2 border-zinc-800 rounded-xl space-y-3">
