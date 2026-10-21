@@ -66,6 +66,8 @@ apiRouter.get('/voices/:id/sample', async (req, res) => {
     try {
       await generateSpeechAudio(sampleText, voice.voiceIdentifier, sampleFilePath);
     } catch (err) {
+      // Remove partial output so the next request retries synthesis instead of serving a corrupt WAV.
+      fs.rmSync(sampleFilePath, { force: true });
       console.error(`Voice sample synthesis failed for ${voiceId}:`, err);
       res.status(502).json({
         error: 'Voice preview synthesis failed. Check the Gemini API key, quota, and server logs.',
