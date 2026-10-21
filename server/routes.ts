@@ -97,12 +97,31 @@ apiRouter.put('/settings', (req, res) => {
 
 apiRouter.get('/connections', (_req, res) => {
   const db = loadDatabase();
-  res.json(db.connections);
+  const requiredEnvironment: Record<string, string[]> = {
+    youtube: ['YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET', 'YOUTUBE_REFRESH_TOKEN'],
+    instagram: ['INSTAGRAM_ACCESS_TOKEN', 'INSTAGRAM_BUSINESS_ACCOUNT_ID'],
+    facebook: ['FACEBOOK_PAGE_ACCESS_TOKEN', 'FACEBOOK_PAGE_ID'],
+  };
+
+  // Derive configuration status from the server's actual environment, not stale or client-written JSON.
+  const connections = db.connections.map((conn) => {
+    const required = requiredEnvironment[conn.platform] ?? [];
+    const configured = required.length > 0 && required.every((name) => Boolean(process.env[name]?.trim()));
+    return {
+      ...conn,
+      connected: configured,
+      credentialsConfigured: configured,
+      status: configured ? 'CONFIGURED' : 'SETUP_REQUIRED',
+      accountName: configured ? conn.accountName : undefined,
+      accountId: configured ? conn.accountId : undefined,
+    };
+  });
+  res.json(connections);
 });
 
 apiRouter.post('/connections/:platform', (req, res) => {
   const platform = req.params.platform;
-  const { accountName, accountId, connected } = req.body;
+  const { connected } = req.body;
   const db = loadDatabase();
   const conn = db.connections.find((c) => c.platform === platform);
 
