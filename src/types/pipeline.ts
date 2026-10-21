@@ -180,7 +180,7 @@ export interface ConnectionConfig {
   platform: TargetPlatform;
   displayName: string;
   connected: boolean;
-  status: 'CONNECTED' | 'SETUP_REQUIRED' | 'EXPIRED' | 'ERROR';
+  status: 'CONNECTED' | 'CONFIGURED' | 'SETUP_REQUIRED' | 'EXPIRED' | 'ERROR';
   accountName?: string;
   accountId?: string;
   lastChecked?: string;
