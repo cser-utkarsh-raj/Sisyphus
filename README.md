@@ -1,10 +1,10 @@
-# Sisyphus
+# Aurora
 
 **An automated short-form video production pipeline for vertical videos under 60 seconds.**
 
-Sisyphus turns a topic into a narrated, scene-based video workflow: script and storyboard generation, speech audio, word-timed subtitles, visual rendering, MP4 encoding, metadata preparation, and publishing workflow tracking. It is designed for educational, science, and entertaining short-form content for YouTube Shorts, Instagram Reels, and Facebook Reels.
+Aurora turns a topic into a narrated, scene-based video workflow: script and storyboard generation, speech audio, word-timed subtitles, visual rendering, MP4 encoding, metadata preparation, and publishing to selected platforms.
 
-> **Project status:** This repository contains an active implementation of the production workflow, but not every external publishing/OAuth path should be assumed production-ready. Configure credentials and verify each integration end-to-end before relying on automated publishing.
+> **Project status:** This repository contains an active implementation of the production workflow, but not every external publishing/OAuth path should be assumed production-ready. Configure credentials and permissions carefully before production use.
 
 ## Features
 
@@ -34,7 +34,7 @@ A job moves through these stages:
 10. Publish to selected platforms
 11. Record final status
 
-Jobs run asynchronously after creation. The UI can track progress and inspect stage logs; failed stages can be retried where supported. Scene-plan validation is recorded separately; the rendering engine performs motion-graphic rendering, subtitle compositing, audio muxing, encoding, and output verification during the compositing stage.
+Jobs run asynchronously after creation. The UI can track progress and inspect stage logs; failed stages can be retried where supported. Scene-plan validation is recorded separately; the rendering engine handles production media generation.
 
 ## Tech stack
 
@@ -66,14 +66,14 @@ ffmpeg -version
 
 ## Deploy the backend with FFmpeg
 
-The video renderer requires both `ffmpeg` and `ffprobe` to exist as operating-system executables on the **backend runtime's PATH**. Installing JavaScript dependencies does not install these binaries. If the job log says `/bin/sh: ffmpeg: not found`, the deployed backend image does not contain FFmpeg.
+The video renderer requires both `ffmpeg` and `ffprobe` to exist as operating-system executables on the **backend runtime's PATH**. Installing JavaScript dependencies does not install these binaries.
 
-This repository now includes a `Dockerfile` that installs FFmpeg/FFprobe, verifies both commands, builds the frontend, runs the engine self-tests, and starts the Express server with `tsx`. It also includes a `render.yaml` blueprint for a Docker-based Render web service.
+This repository now includes a `Dockerfile` that installs FFmpeg/FFprobe, verifies both commands, builds the frontend, runs the engine self-tests, and starts the Express server with `tsx`. It also configures the runtime to serve the application correctly.
 
 ### Google AI Studio & Cloud Run deployment
 
 1. The development sandbox in Google AI Studio includes `ffmpeg` and `ffprobe` pre-installed at `/usr/bin/ffmpeg` and `/usr/bin/ffprobe`. The engine automatically resolves these paths.
-2. In production deployments (such as Cloud Run containers or managed platforms), ensure the container image is built from the repository's `Dockerfile` which installs system packages `ffmpeg` and `ca-certificates`.
+2. In production deployments (such as Cloud Run containers or managed platforms), ensure the container image is built from the repository's `Dockerfile` which installs system packages `ffmpeg` and `ffprobe`.
 3. If deployed on environments where binaries reside in custom locations, set the `FFMPEG_PATH` and `FFPROBE_PATH` environment variables (e.g. `FFMPEG_PATH=/usr/bin/ffmpeg` and `FFPROBE_PATH=/usr/bin/ffprobe`).
 4. Check `GET /api/health` after deployment. The response confirms whether both media tools are available and reports `mediaTools.renderingReady: true`.
 
@@ -81,12 +81,12 @@ This repository now includes a `Dockerfile` that installs FFmpeg/FFprobe, verifi
 
 1. Push the latest `main` branch and create a new Blueprint instance from this repository in Render, or create a Web Service using the Docker runtime and the repository's `Dockerfile`.
 2. Set `GEMINI_API_KEY` in the service environment. Set `APP_URL` to the deployed public HTTPS origin (for example, your Render service URL) for integrations that need it.
-3. Deploy, then open `/api/health` on the service. A healthy HTTP response confirms the server is running; check `mediaTools.renderingReady` to verify that FFmpeg and FFprobe are available and operational.
+3. Deploy, then open `/api/health` on the service. A healthy HTTP response confirms the server is running; check `mediaTools.renderingReady` to verify that FFmpeg and FFprobe are available and operating correctly.
 4. Run a test job and verify that the Render & Encode stage completes successfully.
 
-**Important:** a Dockerfile only takes effect on platforms configured to build and run this repository as a Docker service. If your current host is a static-site deployment or a managed workspace that ignores Dockerfiles, redeploy the Express backend using Docker or configure that host's system packages to install FFmpeg. A Vercel static frontend alone is not a suitable runtime for this long-running FFmpeg worker.
+**Important:** a Dockerfile only takes effect on platforms configured to build and run this repository as a Docker service. If your current host is a static-site deployment or a managed workspace that runs only prebuilt assets, the server-side renderer will not be available.
 
-The current job store and artifacts are local filesystem-based. Before relying on restarts, multiple instances, or production publishing, configure persistent storage and a durable job database/object store; this Docker setup solves the missing executable, not that separate persistence issue.
+The current job store and artifacts are local filesystem-based. Before relying on restarts, multiple instances, or production publishing, configure persistent storage and a durable job database/object store.
 
 ## Run locally
 
@@ -149,16 +149,16 @@ The repository currently defines no dedicated `test` or `format` package script.
 | `FACEBOOK_PAGE_ID` | Facebook Page ID |
 | `FACEBOOK_PAGE_ACCESS_TOKEN` | Facebook Page access token |
 
-Some integrations may require additional permissions, OAuth setup, account eligibility, or implementation work beyond setting environment variables. Consult the Connections screen and the official platform documentation before enabling them.
+Some integrations may require additional permissions, OAuth setup, account eligibility, or implementation work beyond setting environment variables. Consult the Connections screen and the official platform docs before relying on them.
 
 ### Publishing behavior and limitations
 
-- **YouTube:** With `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, and `YOUTUBE_REFRESH_TOKEN`, Sisyphus uploads the generated MP4 through the YouTube resumable upload API. Uploads default to **private**; change visibility in YouTube Studio after verifying the result.
-- **Instagram Reels:** Requires `INSTAGRAM_ACCESS_TOKEN`, `INSTAGRAM_BUSINESS_ACCOUNT_ID`, and a publicly reachable HTTPS `APP_URL`. Meta fetches the rendered MP4 from the job's artifact URL, processes the media container, and the publisher waits for processing to finish before calling `media_publish`. The artifact URL must be accessible to Meta without local-only networking or authentication barriers.
-- **Facebook Reels:** The publisher now initializes a Reels upload, transfers the actual MP4 bytes, calls the finish/publish phase, and verifies that Graph API can resolve the resulting video. This still needs a credentialed live test on an eligible Facebook Page.
-- Missing Gemini credentials or failed script/TTS requests now fail the job instead of silently substituting a fabricated script or tone audio. Set `SISYPHUS_ALLOW_DEMO_FALLBACK=true` only for local demos; do not enable it for production.
+- **YouTube:** With `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, and `YOUTUBE_REFRESH_TOKEN`, Aurora uploads the generated MP4 through the YouTube resumable upload API. Uploads default to **private** visibility unless configured otherwise.
+- **Instagram Reels:** Requires `INSTAGRAM_ACCESS_TOKEN`, `INSTAGRAM_BUSINESS_ACCOUNT_ID`, and a publicly reachable HTTPS `APP_URL`. Meta fetches the rendered MP4 from the job's artifact URL, processes it, and publishes the reel.
+- **Facebook Reels:** The publisher initializes a Reels upload, transfers the actual MP4 bytes, calls the finish/publish phase, and verifies that Graph API can resolve the resulting video. This setup is subject to platform approval and valid tokens.
+- Missing Gemini credentials or failed script/TTS requests now fail the job instead of silently substituting a fabricated script or tone audio. Set `SISYPHUS_ALLOW_DEMO_FALLBACK=true` only for local demos or mock testing.
 - Missing credentials, API errors, missing media IDs, and unfinished processing are failures—not simulated success. A connection marked connected in the UI does not substitute for valid server-side credentials.
-- YouTube uploads are checked with a follow-up `videos.list` request. Instagram waits for container processing to finish before publishing. Facebook's three upload phases are implemented, but all social publishers still require live account-level verification.
+- YouTube uploads are checked with a follow-up `videos.list` request. Instagram waits for container processing to finish before publishing. Facebook's three upload phases are implemented, but all social publishing flows need real credential verification.
 
 ## Data and generated files
 
@@ -167,7 +167,7 @@ The backend stores application state in:
 - `data/sisyphus-store.json` — jobs, voice profiles, connection state, and settings.
 - `data/artifacts/` — generated audio, video, subtitles, thumbnails, and related artifacts.
 
-These are local filesystem paths, not managed cloud storage. Back up the data directory if you need to preserve jobs and generated output. A deployment with ephemeral disks can lose this data when the instance is replaced or restarted; use persistent storage before hosting real workloads.
+These are local filesystem paths, not managed cloud storage. Back up the data directory if you need to preserve jobs and generated output. A deployment with ephemeral disks can lose this data when the service restarts.
 
 ## API overview
 
@@ -188,9 +188,9 @@ For the authoritative route list and request shapes, inspect `server/routes.ts` 
 
 ## Deployment notes
 
-Sisyphus is a **full-stack application**, not just a static Vite site. The UI depends on the Express API, server-side Gemini calls, FFmpeg processing, background pipeline execution, and filesystem access for generated artifacts.
+Aurora is a **full-stack application**, not just a static Vite site. The UI depends on the Express API, server-side Gemini calls, FFmpeg processing, background pipeline execution, and filesystem access to generated artifacts.
 
-A static-only deployment of `dist/` will not provide those backend capabilities. Deploy the Node.js server on a host that supports long-running processes and FFmpeg, and configure persistent storage for `data/`. If the frontend and API are hosted separately, configure API routing/base URLs and CORS appropriately before deployment.
+A static-only deployment of `dist/` will not provide those backend capabilities. Deploy the Node.js server on a host that supports long-running processes and FFmpeg, and configure persistent storage for the local state directory.
 
 Before production use, verify:
 - FFmpeg availability and permissions on the host.
@@ -231,3 +231,4 @@ Before production use, verify:
 ## License
 
 No license file was found when this README was prepared. Unless a license is added to the repository, do not assume the code is available for unrestricted reuse.
+

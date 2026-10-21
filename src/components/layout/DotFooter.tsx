@@ -8,12 +8,12 @@ interface DotFooterProps {
 
 export function DotFooter({ onLibraryClick, onCreateClick }: DotFooterProps) {
   return (
-    <footer className="dot-footer" aria-label="Sisyphus footer">
+    <footer className="dot-footer" aria-label="Aurora footer">
       <div className="dot-footer__inner">
         <div className="dot-footer__product">
           <span className="dot-footer__product-mark" aria-hidden="true" />
           <div>
-            <div className="dot-footer__product-name">Sisyphus</div>
+            <div className="dot-footer__product-name">Aurora</div>
             <p>Automated short-form video production.</p>
           </div>
         </div>
