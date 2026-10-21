@@ -291,7 +291,7 @@ apiRouter.post('/jobs/:id/publish', async (req, res) => {
     const result = await dispatchPublish(job, platform);
     job.publications[platform as 'youtube' | 'instagram' | 'facebook'] = result;
     saveJob(job);
-    res.status(result.success ? 200 : 502).json(result);
+    res.status(result.status === 'published' ? 200 : 502).json(result);
   } catch (err) {
     console.error(`Publish request failed for job ${id} on ${platform}:`, err);
     res.status(502).json({
