@@ -41,7 +41,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-pink-50 flex flex-col font-sans selection:bg-[#ff2a85] selection:text-black">
+    <div className="aurora-shell min-h-screen bg-transparent text-pink-50 flex flex-col font-sans selection:bg-[#ff2a85] selection:text-black">
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
