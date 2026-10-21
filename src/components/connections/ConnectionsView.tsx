@@ -17,6 +17,7 @@ export const ConnectionsView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [testingPlatform, setTestingPlatform] = useState<string | null>(null);
   const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchConnections();
@@ -38,22 +39,23 @@ export const ConnectionsView: React.FC = () => {
 
   const handleToggleConnect = async (platform: string, currentConnected: boolean) => {
     setTestingPlatform(platform);
+    setActionError(null);
     try {
       const res = await fetch(`/api/connections/${platform}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          connected: !currentConnected,
-          accountName: !currentConnected ? `@Aurora_${platform.toUpperCase()}` : undefined,
-          accountId: !currentConnected ? `${platform}_aurora_channel` : undefined,
-        }),
+        body: JSON.stringify({ connected: !currentConnected }),
       });
-
-      if (res.ok) {
-        await fetchConnections();
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const missing = Array.isArray(result.missingEnvironment)
+          ? ` Missing: ${result.missingEnvironment.join(', ')}.`
+          : '';
+        throw new Error((result.error || 'Could not check platform configuration.') + missing);
       }
+      await fetchConnections();
     } catch (err) {
-      console.error('Failed to toggle connection:', err);
+      setActionError(err instanceof Error ? err.message : 'Could not check platform configuration.');
     } finally {
       setTestingPlatform(null);
     }
@@ -81,6 +83,15 @@ export const ConnectionsView: React.FC = () => {
         </p>
       </div>
 
+      <p className="text-xs text-zinc-400">
+        Status checks only confirm required server environment variables are present; they do not validate OAuth tokens or perform a live platform API test.
+      </p>
+      {actionError && (
+        <div role="alert" className="rounded-xl border border-rose-500/50 bg-rose-950/30 px-4 py-3 text-sm text-rose-200">
+          {actionError}
+        </div>
+      )}
+
       {/* Cards Grid */}
       <div className="space-y-6">
         {connections.map((conn) => {
@@ -105,7 +116,7 @@ export const ConnectionsView: React.FC = () => {
                     {isConnected ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500 text-emerald-300 text-xs font-mono font-bold">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                        CONNECTED
+                        CONFIGURED
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-950/80 border border-amber-500 text-amber-300 text-xs font-mono font-bold">
@@ -147,7 +158,7 @@ export const ConnectionsView: React.FC = () => {
                     ) : isConnected ? (
                       'Disconnect'
                     ) : (
-                      'Simulate / Connect'
+                      'Check configuration'
                     )}
                   </button>
                 </div>
