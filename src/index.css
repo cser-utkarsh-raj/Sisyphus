@@ -85,3 +85,186 @@
   background: #ff2a85;
   border-radius: 3px;
 }
+
+/* Aurora atmosphere — luminous rose ribbons over a deep midnight sky */
+:root {
+  color-scheme: dark;
+  --aurora-rose: #ff72c6;
+  --aurora-hot: #ff3e9d;
+  --aurora-lilac: #bd83ff;
+  --aurora-ice: #ffd7ef;
+  --aurora-line: rgba(255, 151, 215, 0.19);
+  --aurora-glass: rgba(20, 11, 27, 0.76);
+}
+
+html {
+  background: #080711;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 12% 5%, rgba(112, 28, 92, 0.24), transparent 36%),
+    radial-gradient(ellipse at 88% 18%, rgba(90, 38, 132, 0.19), transparent 32%),
+    #080711;
+  color: #fff4fb;
+}
+
+.aurora-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background:
+    radial-gradient(ellipse at 50% -18%, rgba(255, 69, 171, 0.12), transparent 52%),
+    linear-gradient(180deg, rgba(8, 7, 17, 0.78), rgba(8, 7, 17, 0.96) 72%);
+}
+
+.aurora-shell::before,
+.aurora-shell::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+  inset: -24% -18%;
+  opacity: 0.52;
+  filter: blur(54px) saturate(125%);
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.aurora-shell::before {
+  background:
+    radial-gradient(ellipse 21% 54% at 17% 45%, rgba(255, 46, 157, 0.31), transparent 72%),
+    radial-gradient(ellipse 17% 57% at 38% 38%, rgba(205, 94, 255, 0.22), transparent 72%),
+    radial-gradient(ellipse 19% 58% at 62% 43%, rgba(255, 105, 196, 0.24), transparent 72%),
+    radial-gradient(ellipse 16% 54% at 83% 34%, rgba(143, 85, 255, 0.22), transparent 72%);
+  animation: pink-aurora-drift 24s ease-in-out infinite alternate;
+}
+
+.aurora-shell::after {
+  inset: -18% -28%;
+  opacity: 0.34;
+  background:
+    radial-gradient(ellipse 15% 42% at 27% 55%, rgba(255, 180, 226, 0.24), transparent 70%),
+    radial-gradient(ellipse 18% 48% at 71% 51%, rgba(255, 49, 145, 0.21), transparent 72%);
+  animation: pink-aurora-drift-reverse 31s ease-in-out infinite alternate;
+}
+
+@keyframes pink-aurora-drift {
+  0% { transform: translate3d(-2%, -1%, 0) rotate(-3deg) scale(1); }
+  50% { transform: translate3d(2%, 2%, 0) rotate(2deg) scale(1.06); }
+  100% { transform: translate3d(-1%, 3%, 0) rotate(-1deg) scale(1.02); }
+}
+
+@keyframes pink-aurora-drift-reverse {
+  0% { transform: translate3d(2%, 1%, 0) rotate(2deg) scale(1.04); }
+  100% { transform: translate3d(-3%, -2%, 0) rotate(-3deg) scale(0.98); }
+}
+
+/* Keep existing screens and their behavior, but give the interface a softer glass finish. */
+.aurora-shell header {
+  background: rgba(12, 8, 20, 0.78) !important;
+  border-color: rgba(255, 140, 210, 0.17) !important;
+  box-shadow: 0 1px 0 rgba(255, 186, 231, 0.04), 0 14px 48px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(22px) saturate(145%);
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+}
+
+.aurora-shell main {
+  position: relative;
+  z-index: 1;
+}
+
+.aurora-shell main h1,
+.aurora-shell main h2 {
+  text-wrap: balance;
+  letter-spacing: -0.035em;
+}
+
+.aurora-shell main h1 {
+  text-shadow: 0 0 32px rgba(255, 101, 193, 0.16);
+}
+
+.aurora-shell main input,
+.aurora-shell main textarea,
+.aurora-shell main select {
+  background-color: rgba(9, 7, 17, 0.78) !important;
+  border-color: rgba(255, 160, 218, 0.19) !important;
+  border-radius: 14px;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.aurora-shell main input:focus,
+.aurora-shell main textarea:focus,
+.aurora-shell main select:focus {
+  border-color: rgba(255, 112, 198, 0.9) !important;
+  box-shadow: 0 0 0 3px rgba(255, 77, 173, 0.12), 0 0 26px rgba(255, 77, 173, 0.09);
+}
+
+.aurora-shell main button {
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.aurora-shell main button:hover:not(:disabled) {
+  border-color: rgba(255, 143, 211, 0.55);
+}
+
+.aurora-shell main button:focus-visible,
+.aurora-shell header button:focus-visible,
+.aurora-shell a:focus-visible {
+  outline: 2px solid var(--aurora-rose);
+  outline-offset: 3px;
+}
+
+.aurora-shell main form,
+.aurora-shell main [class*="rounded-2xl"][class*="border"],
+.aurora-shell main [class*="rounded-xl"][class*="border"] {
+  border-color: var(--aurora-line);
+  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 210, 239, 0.035);
+}
+
+.aurora-shell main form {
+  background: linear-gradient(145deg, rgba(25, 14, 33, 0.88), rgba(13, 10, 22, 0.9)) !important;
+  backdrop-filter: blur(16px);
+}
+
+.aurora-shell header nav button {
+  border-width: 1px !important;
+  border-radius: 999px !important;
+  letter-spacing: 0.08em;
+}
+
+.aurora-shell header nav button[class*="bg-[#ff2a85]"] {
+  background: linear-gradient(120deg, #ff4fae, #ff8bd1) !important;
+  color: #210819 !important;
+  border-color: rgba(255, 222, 243, 0.42) !important;
+  box-shadow: 0 0 26px rgba(255, 63, 164, 0.22) !important;
+}
+
+.aurora-shell footer {
+  position: relative;
+  z-index: 1;
+  border-color: rgba(255, 140, 210, 0.13);
+}
+
+::selection {
+  background: rgba(255, 79, 174, 0.75);
+  color: #190815;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .aurora-shell::before,
+  .aurora-shell::after { animation: none !important; }
+  .aurora-shell main button,
+  .aurora-shell main input,
+  .aurora-shell main textarea,
+  .aurora-shell main select { transition: none !important; }
+}
+
